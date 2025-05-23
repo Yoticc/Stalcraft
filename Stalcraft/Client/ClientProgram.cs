@@ -2,10 +2,10 @@
 {
     public void Main()
     {
-        const int ConsoleWidth = 90;
-        const int ConsoleHeight = 25;
+        var macro = new InterceptionManager();
+        HackManager.SetMacro(macro);
 
-        var app = new ConsoleApplication(ConsoleWidth, ConsoleHeight);
+        var app = new ConsoleApplication(macro);
         app.Run<MainWindow>();
     }
 }

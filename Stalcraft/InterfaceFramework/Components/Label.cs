@@ -1,44 +1,68 @@
 ﻿using System.Diagnostics.CodeAnalysis;
 using System.Drawing;
 
+delegate void LabelEventArgs(Label sender);
+
 class Label : Control
 {
-    public Label(Point? location = null, string? text = null, ConsoleColor? foregroundColor = null) : base(location)
-    {
-        SetText(text);
+    public new LabelEventArgs? MouseEnter;
+    public new LabelEventArgs? MouseLeave;
+    public new LabelEventArgs? MouseClick;
+    public new LabelEventArgs? MouseLeftClick;
+    public new LabelEventArgs? MouseRightClick;
 
-        ForegroundColor = foregroundColor??ConsoleColor.White;
-    }
+    private protected override void OnMouseEnter() => MouseEnter?.Invoke(this);
+    private protected override void OnMouseLeave() => MouseLeave?.Invoke(this);
+    private protected override void OnMouseClick() => MouseClick?.Invoke(this);
+    private protected override void OnMouseLeftClick() => MouseLeftClick?.Invoke(this);
+    private protected override void OnMouseRightClick() => MouseRightClick?.Invoke(this);
 
-    [AllowNull] public string Text { get; private set; }
-    public ConsoleColor ForegroundColor { get; private set; }
+    public Label(ConsoleText text, Point? location = null) : base(location: location, size: new(0, 1)) => SetText(text);
 
-    public int TextLength => Text is not null ? Text.Length : 0;
-    public override Rectangle Bounds => new(X, Y, Text.Length, Text.Length > 0 ? 1 : 0);
+    [AllowNull] public ConsoleText Text { get; private set; }
 
     private protected override void OnDraw()
     {
-        if (Text is not null)
-            Application.DrawText(this, Text, 0, 0, ForegroundColor);
+        Application.DrawText(this, Text, 0, 0);
 
         base.OnDraw();
     }
 
-    public void SetText(string? text)
+    public void SetText(ConsoleText text)
     {
-        var oldText = Text;
-        if (oldText == text)
-            return;
-                
-        if (text is null)
-            text = string.Empty;
-
         Text = text;
+        
+        SetWidth(width: text.Length, silence: true);
+        Redraw();
+    }
 
-        var oldLength = TextLength;
-        if (oldLength != text.Length)
-            SetWidth(text.Length);
+    public void SetStyle(ConsoleTextStyles styles)
+    {
+        Text = Text with { Styles = styles };
 
         Redraw();
+    }
+
+    public void AddStyle(ConsoleTextStyles setStyles)
+    {
+        var text = Text;
+        var styles = text.Styles | setStyles;
+        Text = text with { Styles = styles };
+        Redraw();
+    }
+
+    public void RemoveStyle(ConsoleTextStyles setStyles)
+    {
+        var text = Text;
+        var styles = text.Styles & ~setStyles;
+        Text = text with { Styles = styles };
+        Redraw();
+    }
+
+    public void SetStyle(ConsoleTextStyles setStyles, bool flag)
+    {
+        if (flag)
+            AddStyle(setStyles);
+        else RemoveStyle(setStyles);
     }
 }

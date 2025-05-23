@@ -1,12 +1,31 @@
 ﻿<Project Sdk="Microsoft.NET.Sdk">
 
   <PropertyGroup>
-    <OutputType>Exe</OutputType>
+    <OutputType>WinExe</OutputType>
     <TargetFramework>net9.0-windows</TargetFramework>
     <ImplicitUsings>enable</ImplicitUsings>
     <Nullable>enable</Nullable>
     <AllowUnsafeBlocks>true</AllowUnsafeBlocks>
     <Platforms>x64</Platforms>
   </PropertyGroup>
+
+  <ItemGroup>
+    <Folder Include="Auxiliaeities\" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <PackageReference Include="System.Drawing.Common" Version="9.0.5" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\..\ScreenCapture\ScreenCapture\ScreenCapture.csproj" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <None Update="interception.dll">
+      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+      <CustomToolNamespace></CustomToolNamespace>
+    </None>
+  </ItemGroup>
 
 </Project>

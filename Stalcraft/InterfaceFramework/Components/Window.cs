@@ -1,22 +1,29 @@
 ﻿using System.Diagnostics.CodeAnalysis;
+using System.Drawing;
 
 abstract class Window
 {
-    public Window(string title)
+    public Window(string title, int width, int height)
     {
-        Title = title;
+        (Title, Width, Height) = (title, width, height);
+
+        Dispatcher = new(this);
     }
+
+    public WindowDispatcher Dispatcher;
 
     [AllowNull] public ConsoleApplication Application;
     public Window? PreviousWindow;
     public Window? NextWindow;
 
     public readonly string Title;
+    public readonly int Width;
+    public readonly int Height;
     public readonly List<Control> Controls = new();
     
     public bool HasOwner => PreviousWindow is not null;
-    public bool IsInitialized => Application is not null;
-
+    public bool IsInitialized { get; private set; }
+    
     public void Open()
     {
         Application.UpdateTitle();
@@ -113,5 +120,140 @@ abstract class Window
         Draw();
     }
 
+    public Bitmap DumpBounds()
+    {
+        const int xmult = ConsoleManagement.CharWidth;
+        const int ymult = ConsoleManagement.CharHeight;
+
+        var bitmap = new Bitmap(Width * xmult, Height * ymult);
+        var graphics = Graphics.FromImage(bitmap);
+
+        graphics.FillRectangle(new SolidBrush(Color.FromArgb(31, 31, 31)), new Rectangle(0, 0, bitmap.Width, bitmap.Height));
+
+        for (var i = 0; i < Controls.Count; i++)
+        {
+            var control = Controls[i];
+            DrawBounds(graphics, control, 0);
+        }
+
+        return bitmap;
+
+        static void DrawBounds(Graphics graphics, Control control, int depth)
+        {
+            var bounds = control.AbsoluteBounds;
+            var grayScale = byte.MaxValue - depth * 32;
+            var pen = new Pen(Color.FromArgb(grayScale, grayScale, grayScale), 2);
+            var rectangle = Rectangle.FromLTRB(bounds.Left * xmult, bounds.Top * ymult, bounds.Right * xmult, bounds.Bottom * ymult);
+            graphics.DrawRectangle(pen, rectangle);
+
+            depth++;
+            var controls = control.Controls;
+            for (var i = 0; i < controls.Count; i++)
+            {
+                control = controls[i];
+                DrawBounds(graphics, control, depth);
+            }
+        }
+    }
+
+    Control? lastHoveredControl;
+    private protected virtual void OnMouseMove(int x, int y)
+    {
+        for (var i = 0; i < Controls.Count; i++)
+        {
+            var control = Controls[i];
+            var bounds = control.AbsoluteBounds;
+            if (x < bounds.Left || x >= bounds.Right || y < bounds.Top || y >= bounds.Bottom)
+                continue;
+
+            var enteredControl = FindEnteredControl(control);
+            if (enteredControl != lastHoveredControl)
+            {
+                if (lastHoveredControl is not null)
+                    lastHoveredControl.Dispatcher.InvokeOnMouseLeave();
+                
+                lastHoveredControl = enteredControl;
+                control.Dispatcher.InvokeOnMouseEnter();
+            }            
+            return;
+        }
+
+        if (lastHoveredControl is not null)
+        {
+            lastHoveredControl.Dispatcher.InvokeOnMouseLeave();
+            lastHoveredControl = null;
+        }
+
+        Control FindEnteredControl(Control control)
+        {
+            var currentControl = control;
+            var controls = control.Controls;
+            for (var i = 0; i < controls.Count; i++)
+            {
+                control = controls[i];
+                var bounds = control.AbsoluteBounds;
+                if (x < bounds.Left || x >= bounds.Right || y < bounds.Top || y >= bounds.Bottom)
+                    continue;
+
+                currentControl = control;
+                controls = control.Controls;
+                i = -1;
+            }
+
+            return currentControl;
+        }
+    }
+
+    private protected virtual void OnMouseEnter() { }
+
+    private protected virtual void OnMouseLeave()
+    {
+        if (lastHoveredControl is not null)
+        {
+            lastHoveredControl.Dispatcher.InvokeOnMouseLeave();
+            lastHoveredControl = null;
+        }
+    }
+
+    private protected virtual void OnMouseClick()
+    {
+        if (lastHoveredControl is not null)
+            lastHoveredControl.Dispatcher.InvokeOnMouseClick();
+    }
+
+    private protected virtual void OnMouseLeftClick() 
+    {
+        if (lastHoveredControl is not null)
+            lastHoveredControl.Dispatcher.InvokeOnMouseLeftClick();
+    }
+
+    private protected virtual void OnMouseRightClick() 
+    {
+        if (lastHoveredControl is not null)
+            lastHoveredControl.Dispatcher.InvokeOnMouseRightClick();
+    }
+
     private protected virtual void OnDraw() { }
+    private protected virtual void OnInit() { }
+    private protected virtual void OnOpen() { }
+
+    public class WindowDispatcher(Window owner)
+    {
+        public void InvokeOnInit()
+        {
+            if (owner.IsInitialized)
+                return;
+
+            owner.OnInit();
+            owner.IsInitialized = true;
+        }
+
+        public void InvokeOnOpen() => owner.OnOpen();
+        public void InvokeOnMouseMove(int x, int y) => owner.OnMouseMove(x, y);
+        public void InvokeOnMouseEnter() => owner.OnMouseEnter();
+        public void InvokeOnMouseLeave() => owner.OnMouseLeave();
+        public void InvokeOnMouseClick() => owner.OnMouseClick();
+        public void InvokeOnMouseLeftClick() => owner.OnMouseLeftClick();
+        public void InvokeOnMouseRightClick() => owner.OnMouseRightClick();
+    }
 }

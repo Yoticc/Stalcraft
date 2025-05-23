@@ -1,4 +1,8 @@
-﻿// check drivers etc
+﻿#if RELEASE
+if (System.Diagnostics.Debugger.IsAttached)
+    return;
+#endif
 
-var clientProgram = new ClientProgram();
-clientProgram.Main();
+Installer.EnsureInstalled();
+
+new ClientProgram().Main();
