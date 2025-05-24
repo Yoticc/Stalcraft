@@ -147,7 +147,7 @@ static unsafe class Console
     public static void SetBufferSize(int width, int height)
     {
         (BufferWidth, BufferHeight) = (System.Console.BufferWidth, System.Console.BufferHeight) = (width, height);
-        ConsoleWindow.RedrawWindow();
+        ConsoleWindow.RedrawWindow();        
     }
 
     public static void Write(char symbol, int x = int.MaxValue, int y = int.MaxValue) => Write(symbol.ToString(), x , y);

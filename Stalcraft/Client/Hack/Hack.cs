@@ -2,7 +2,7 @@
 
 abstract class Hack
 {
-    public Hack(string name, Keys? defaultKeybind = null)
+    public Hack(string name, Keys defaultKeybind = default)
     {
         Name = name;
         Keybind = DefaultKeybind = defaultKeybind;
@@ -15,12 +15,12 @@ abstract class Hack
     public Action? HackTurned;
 
     public string Name { get; private init; }
-    public Keys? DefaultKeybind { get; private init; }
-    public Keys? Keybind { get; private set; }
+    public Keys DefaultKeybind { get; private init; }
+    public Keys Keybind { get; private set; }
     public int InitIndex { get; private set; }
 
     public bool IsEnabled { get; private set; }
-    public bool HasKeybind => Keybind != null;
+    public bool HasKeybind => Keybind != default;
 
     public void SetKeybind(Keys key) => Keybind = key;
 

@@ -153,6 +153,8 @@ abstract class Window
     }
 
     Control? lastHoveredControl;
+    Control? lastClickedControl;
+    Control? lastActiveClickedControl;
     private protected virtual void OnMouseMove(int x, int y)
     {
         for (var i = 0; i < Controls.Count; i++)
@@ -169,7 +171,7 @@ abstract class Window
                     lastHoveredControl.Dispatcher.InvokeOnMouseLeave();
                 
                 lastHoveredControl = enteredControl;
-                control.Dispatcher.InvokeOnMouseEnter();
+                enteredControl.Dispatcher.InvokeOnMouseEnter();
             }            
             return;
         }
@@ -217,16 +219,47 @@ abstract class Window
             lastHoveredControl.Dispatcher.InvokeOnMouseClick();
     }
 
-    private protected virtual void OnMouseLeftClick() 
+    private protected virtual void OnMouseLeftClick()
     {
         if (lastHoveredControl is not null)
             lastHoveredControl.Dispatcher.InvokeOnMouseLeftClick();
+    }
+
+    private protected virtual void OnMouseLeftDown()
+    {
+        if (lastHoveredControl is not null)
+        {
+            lastHoveredControl.Dispatcher.InvokeOnMouseLeftDown();
+
+            lastClickedControl = lastActiveClickedControl = lastHoveredControl;
+        }
+    }
+
+    private protected virtual void OnMouseLeftUp()
+    {
+        if (lastHoveredControl is not null)
+            lastHoveredControl.Dispatcher.InvokeOnMouseLeftUp();
     }
 
     private protected virtual void OnMouseRightClick() 
     {
         if (lastHoveredControl is not null)
             lastHoveredControl.Dispatcher.InvokeOnMouseRightClick();
+    }
+
+    private protected virtual void OnMouseDrag(int x, int y)
+    {
+        if (lastHoveredControl is not null)
+        {
+            if (lastHoveredControl != lastActiveClickedControl)
+            {
+                lastActiveClickedControl = null;
+                return;
+            }
+
+            var location = lastHoveredControl.AbsoluteLocation;
+            lastHoveredControl.Dispatcher.InvokeOnMouseDrag(x - location.X, y - location.Y);
+        }
     }
 
     private protected virtual void OnDraw() { }
@@ -250,6 +283,9 @@ abstract class Window
         public void InvokeOnMouseLeave() => owner.OnMouseLeave();
         public void InvokeOnMouseClick() => owner.OnMouseClick();
         public void InvokeOnMouseLeftClick() => owner.OnMouseLeftClick();
+        public void InvokeOnMouseLeftDown() => owner.OnMouseLeftDown();
+        public void InvokeOnMouseLeftUp() => owner.OnMouseLeftUp();
         public void InvokeOnMouseRightClick() => owner.OnMouseRightClick();
+        public void InvokeOnMouseDrag(int x, int y) => owner.OnMouseDrag(x, y);
     }
 }

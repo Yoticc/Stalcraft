@@ -2,7 +2,7 @@
 #pragma warning disable CS8618 // Non-nullable field must contain a non-null value when exiting constructor. Consider adding the 'required' modifier or declaring as nullable.
 class MainWindow : Window
 {
-    public MainWindow() : base("Stalcraft client", 46, 8) { }
+    public MainWindow() : base("Stalcraft client", 50, 7) { }
 
     OverlayWindow overlayWindow;
     HackListPanel hackListPanel;
@@ -17,23 +17,16 @@ class MainWindow : Window
         InitButtons();
         InitOptionsPanel();
 
-        new Thread(() =>
-        {
-            Thread.Sleep(500);
-
-
-        }).Start();
-
-        void InitHacks()
+        void InitHacks()    
         {
             hackListPanel = new HackListPanel();
 
             nameplatedHacksPanel = new NameplatedPanel(
-                nameplateText: new(text: "hacks", styles: ConsoleForegroundColor.DarkYellow),
+                nameplateText: new(text: "hacks", styles: ConsoleForegroundColor.Gray),
                 location: new(0, 1),
                 size: new(24, 4),
                 panelBorderStyle: PanelBorderStyle.ASCII,
-                borderStyles: ConsoleForegroundColor.DarkYellow
+                borderStyles: ConsoleForegroundColor.Gray
             );
 
             AppearHacks();
@@ -56,13 +49,23 @@ class MainWindow : Window
         void InitOptionsPanel()
         {
             var optionsPanel = new NameplatedPanel(
-                nameplateText: new(text: "options", styles: ConsoleForegroundColor.DarkGreen),
+                nameplateText: new(text: "options", styles: ConsoleForegroundColor.Gray),
                 location: new(28, 1),
-                size: new(16, 4),
+                size: new(20, 4),
                 panelBorderStyle: PanelBorderStyle.ASCII,
-                borderStyles: ConsoleForegroundColor.Green,
-                controls: []
+                borderStyles: ConsoleForegroundColor.Gray
             );
+
+            var copaq = new OptionPanel(optionsPanel, optionName: "copaq", location: new(0, 0));
+            var gopaq = new OptionPanel(optionsPanel, optionName: "gopaq", location: new(0, 1));
+
+            var defaults = new Button(text: new(text: "default", styles: ConsoleForegroundColor.Gray), location: new(optionsPanel.Width - 9, 3))
+            {
+                MouseEnter = button => button.SetStyle(ConsoleForegroundColor.White),
+                MouseLeave = button => button.SetStyle(ConsoleForegroundColor.Gray)
+            };
+
+            optionsPanel.AddControls(copaq, gopaq, defaults);
 
             AddControls(optionsPanel);
         }

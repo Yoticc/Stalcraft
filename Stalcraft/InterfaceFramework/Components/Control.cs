@@ -2,6 +2,7 @@
 using System.Drawing;
 
 delegate void ControlEventArgs(Control sender);
+delegate void ControlDragEventArgs(Control sender, int x, int y);
 
 abstract class Control
 {
@@ -75,7 +76,10 @@ abstract class Control
     public ControlEventArgs? MouseLeave;
     public ControlEventArgs? MouseClick;
     public ControlEventArgs? MouseLeftClick;
+    public ControlEventArgs? MouseLeftDown;
+    public ControlEventArgs? MouseLeftUp;
     public ControlEventArgs? MouseRightClick;
+    public ControlDragEventArgs? MouseDrag;
 
     public void SetWindow(Window? window)
     {
@@ -174,7 +178,10 @@ abstract class Control
     private protected virtual void OnMouseLeave() => MouseLeave?.Invoke(this);
     private protected virtual void OnMouseClick() => MouseClick?.Invoke(this);
     private protected virtual void OnMouseLeftClick() => MouseLeftClick?.Invoke(this);
+    private protected virtual void OnMouseLeftDown() => MouseLeftDown?.Invoke(this);
+    private protected virtual void OnMouseLeftUp() => MouseLeftUp?.Invoke(this);
     private protected virtual void OnMouseRightClick() => MouseRightClick?.Invoke(this);
+    private protected virtual void OnMouseDrag(int x, int y) => MouseDrag?.Invoke(this, x, y);
 
     public class ControlDispatcher(Control owner)
     {
@@ -190,6 +197,9 @@ abstract class Control
         }
         public void InvokeOnMouseClick() => owner.OnMouseClick();
         public void InvokeOnMouseLeftClick() => owner.OnMouseLeftClick();
+        public void InvokeOnMouseLeftDown() => owner.OnMouseLeftDown();
+        public void InvokeOnMouseLeftUp() => owner.OnMouseLeftUp();
         public void InvokeOnMouseRightClick() => owner.OnMouseRightClick();
+        public void InvokeOnMouseDrag(int x, int y) => owner.OnMouseDrag(x, y);
     }
 }

@@ -64,7 +64,7 @@ static class ConsoleWindow
         windowSidePadding = (window.Width - screen.Width - 12) / 2;      
     }
 
-    public static Rectangle WindowRectangle => User32.GetWindowRectangle(windowHandle);
+    public static Rectangle WindowRectangle { get => User32.GetWindowRectangle(windowHandle); set => User32.SetWindowRectangle(windowHandle, value.X, value.Y, value.Width, value.Height); }
 
     public static Rectangle ClientRectangle => User32.GetWindowScreenRectangle(windowHandle);
 

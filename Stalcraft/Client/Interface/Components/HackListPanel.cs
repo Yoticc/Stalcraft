@@ -17,7 +17,7 @@
     {
         var index = hack.InitIndex;
         var panel = panels[index];
-        panel.UpdateHackState();
+        panel.UpdateLabelState();
     }
 
     void RegisterEvents() => HackManager.HackTurned += OnHackTurned;
@@ -42,15 +42,21 @@
         {
             this.hack = hack;
 
-            nameLabel = new HackNameLabel(hack);
-            nameLabel.MouseClick += sender => (sender as HackNameLabel)!.Hack.Turn();
-
-            keybindLabel = new HackKeybindLabel(hack);
-            keybindLabel.MouseRightClick += sender =>
+            nameLabel = new HackNameLabel(hack)
             {
-                var label = (sender as HackKeybindLabel)!;
-                var hack = label.Hack;
-                OnKeybindMouseClick(label, hack);
+                MouseLeftClick = sender => (sender as HackNameLabel)!.Hack.Turn(),
+                MouseEnter = sender => UpdateLabelState(),
+                MouseLeave = sender => UpdateLabelState()
+            };
+
+            keybindLabel = new HackKeybindLabel(hack)
+            {
+                MouseRightClick = sender =>
+                {
+                    var label = (sender as HackKeybindLabel)!;
+                    var hack = label.Hack;
+                    OnKeybindMouseClick(label, hack);
+                }
             };
 
             AddControls(nameLabel, keybindLabel);
@@ -63,19 +69,33 @@
 
         public void UpdateHackState()
         {
-            var style = hack.IsEnabled ? ConsoleForegroundColor.Green : ConsoleForegroundColor.Red;
-            nameLabel.SetStyle(style);
+            UpdateLabelState();
+            UpdateKeybindState();
+        }
 
+        public void UpdateLabelState()
+        {
+            var style = 
+                hack.IsEnabled 
+                ? ConsoleForegroundColor.Gray | ConsoleTextStyles.Inverse 
+                : nameLabel.IsHoveredByMouse
+                  ? ConsoleForegroundColor.White
+                  : ConsoleForegroundColor.Gray;
+
+            nameLabel.SetStyle(style);
+        }
+
+        public void UpdateKeybindState()
+        {
             var text = new ConsoleMultistyleText();
             text.Add(text: "[", styles: ConsoleForegroundColor.DarkGray);
 
-            var nullableKeybind = hack.Keybind;
-            if (nullableKeybind.HasValue)
+            var keybind = hack.Keybind;
+            if (keybind != default)
             {
-                var keybind = nullableKeybind.Value;
                 var formattedKeybind = KeysFormatter.Formate(keybind);
                 text.Add(text: formattedKeybind);
-            }            
+            }
 
             text.Add(text: "]", styles: ConsoleForegroundColor.DarkGray);
             keybindLabel.SetText(text);
@@ -95,7 +115,7 @@
             {
                 Interception.OnKeyUp -= OnKeyUp;
                 hack.SetKeybind(key);
-                UpdateHackState();
+                UpdateKeybindState();
 
                 return false;
             }
@@ -110,7 +130,7 @@
 
         class HackKeybindLabel : MultistyleLabel
         {
-            public HackKeybindLabel(Hack hack) : base(text: ConsoleMultistyleText.Empty, location: new(hack.Name.Length + 1, 0)) => Hack = hack;
+            public HackKeybindLabel(Hack hack) : base(text: ConsoleMultistyleText.Empty, location: new(hack.Name.Length + 1, 0)) => Hack = hack;            
 
             public readonly Hack Hack;
         }

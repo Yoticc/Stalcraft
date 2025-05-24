@@ -3,7 +3,7 @@
 class PinButton : Button
 {
     public PinButton(MainWindow mainWindow, OverlayWindow overlayWindow, Point location = default)
-        : base(new(text: "o", styles: ConsoleForegroundColor.DarkRed), location)
+        : base(new(text: "o", styles: ConsoleForegroundColor.Gray), location)
         => (this.mainWindow, this.overlayWindow) = (mainWindow, overlayWindow);
 
     MainWindow mainWindow;
@@ -47,11 +47,8 @@ class PinButton : Button
     private protected override void OnMouseLeave() => UpdateStyles();
 
     void UpdateStyles() => SetStyle(
-        pinned
-        ? IsHoveredByMouse
-          ? ConsoleForegroundColor.Green
-          : ConsoleForegroundColor.DarkGreen
-        : IsHoveredByMouse
-          ? ConsoleForegroundColor.Red
-          : ConsoleForegroundColor.DarkRed);
+        IsHoveredByMouse
+        ? ConsoleForegroundColor.White
+        : ConsoleForegroundColor.Gray
+    );
 }

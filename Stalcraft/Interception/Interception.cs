@@ -19,6 +19,9 @@ static class Interception
     public static int MouseX => LastMouseX;
     public static int MouseY => LastMouseY;
 
+    public static bool IsLeftMouseDown => isLeftMouseDown;
+    public static bool IsRightMouseDown => isRightMouseDown;
+
     static Interception()
     {
 #if DEBUG
@@ -215,10 +218,6 @@ static class Interception
         Thread.Sleep(delay);
         KeyUp(key);
     }
-
-    public static bool IsLeftMouseDown() => isLeftMouseDown;
-
-    public static bool IsRightMouseDown() => isRightMouseDown;
 
     public static bool IsKeyDown(int deviceID, Keys key) => DownedKeys.Contains(key);
 

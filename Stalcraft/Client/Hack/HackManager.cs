@@ -22,9 +22,23 @@ static class HackManager
             hack.HackTurned += () => HackTurned?.Invoke(hack);
             hack.SetInitIndex(index);
         }
+
+        Interception.OnKeyUp += OnKeyUp;
     }
 
     public static HackTurnedDelegate? HackTurned;
+
+    static bool OnKeyUp(Keys key)
+    {
+        if (!StalcraftWindow.IsActive)
+            return false;
+
+        foreach (var hack in Hacks)
+            if (hack.Keybind == key)
+                hack.Turn();
+
+        return false;
+    }
 
     public static bool ShouldCaptureFrame()
     {

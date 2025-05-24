@@ -77,4 +77,12 @@ static unsafe class User32
         ClientToScreen(hwnd, &client);
         return client;
     }
+
+    public static (int Width, int Height) GetMonitorResolution()
+    {
+        var desktopHwnd = GetDesktopWindow();
+        int* rect = stackalloc int[4];
+        GetWindowRect(desktopHwnd, rect);
+        return (rect[2], rect[3]);
+    }
 }

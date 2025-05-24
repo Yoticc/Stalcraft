@@ -2,7 +2,7 @@
 
 class CloseButton : Button
 {
-    public CloseButton(Point location = default) : base(new(text: "x", styles: ConsoleForegroundColor.DarkRed), location) { }
+    public CloseButton(Point location = default) : base(new(text: "x", styles: ConsoleForegroundColor.Gray), location) { }
 
     private protected override void OnClick() => Environment.Exit(0);
 
@@ -10,5 +10,5 @@ class CloseButton : Button
 
     private protected override void OnMouseLeave() => UpdateStyles();
 
-    void UpdateStyles() => SetStyle(IsHoveredByMouse ? ConsoleForegroundColor.Red : ConsoleForegroundColor.DarkRed);
+    void UpdateStyles() => SetStyle(IsHoveredByMouse ? ConsoleForegroundColor.White : ConsoleForegroundColor.Gray);
 }

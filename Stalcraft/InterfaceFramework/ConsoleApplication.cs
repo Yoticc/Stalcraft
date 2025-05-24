@@ -82,6 +82,8 @@ unsafe static class ConsoleApplication
                 return;
 
             currentWindow.Dispatcher.InvokeOnMouseMove(x, y);
+            if (Interception.IsLeftMouseDown)
+                OnMouseDrag(x, y);
         }
     }
 
@@ -123,15 +125,22 @@ unsafe static class ConsoleApplication
             OnKeyUp(key);
             return false;
         };
+
+        Interception.OnKeyDown += (key, repeat) =>
+        {
+            if (repeat)
+                return false;
+
+            OnKeyDown(key);
+            return false;
+        };
     }
 
     static void OnKeyUp(Keys key)
     {
-        if (currentWindow is null)
-            return;
-
         if (key == Keys.MouseLeft)
         {
+            OnMouseLeftUp();
             OnMouseClick();
             OnMouseLeftClick();
         }
@@ -142,11 +151,26 @@ unsafe static class ConsoleApplication
         }
     }
 
-    static void OnMouseClick() => currentWindow!.Dispatcher.InvokeOnMouseClick();
+    static void OnKeyDown(Keys key)
+    {
+        if (key == Keys.MouseLeft)
+        {
+            OnMouseLeftDown();
+            OnMouseDrag(lastMouseOnConsoleX, lastMouseOnConsoleY);
+        }
+    }
 
-    static void OnMouseRightClick() => currentWindow!.Dispatcher.InvokeOnMouseRightClick();
+    static void OnMouseClick() => currentWindow?.Dispatcher.InvokeOnMouseClick();
 
-    static void OnMouseLeftClick() => currentWindow!.Dispatcher.InvokeOnMouseLeftClick();
+    static void OnMouseRightClick() => currentWindow?.Dispatcher.InvokeOnMouseRightClick();
+
+    static void OnMouseLeftClick() => currentWindow?.Dispatcher.InvokeOnMouseLeftClick();
+
+    static void OnMouseLeftDown() => currentWindow?.Dispatcher.InvokeOnMouseLeftDown();
+
+    static void OnMouseLeftUp() => currentWindow?.Dispatcher.InvokeOnMouseLeftUp();
+
+    static void OnMouseDrag(int x, int y) => currentWindow?.Dispatcher.InvokeOnMouseDrag(x, y);
 
     static Rectangle windowRectangle;
     static Point cursorPosition;
@@ -187,8 +211,6 @@ unsafe static class ConsoleApplication
         runnedWindow = masterWindow;
         SetCurrentWindow(masterWindow);
         masterWindow.Open();
-
-        Thread.Sleep(int.MaxValue);
     }
 
     public static void SetCurrentWindow(Window window) => currentWindow = window;

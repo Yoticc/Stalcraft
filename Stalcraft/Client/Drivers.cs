@@ -1,8 +1,8 @@
 ﻿using System.Security.Principal;
 
-class DriverInstaller
+class Drivers
 {
-    public static void EnsureInstalled()
+    public static void EnsureIsInstalled()
     {
         if (!HasAdminPrivileges)
             User32.MessageBox("error", "no admin privileges");
