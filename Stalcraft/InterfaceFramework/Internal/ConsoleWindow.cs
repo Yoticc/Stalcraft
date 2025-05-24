@@ -1,6 +1,6 @@
 ﻿using System.Drawing;
 
-static class WindowManagement
+static class ConsoleWindow
 {
     static nint windowHandle;
     public static nint WindowHandle => windowHandle;

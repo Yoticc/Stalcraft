@@ -1,201 +1,339 @@
-﻿using System.Runtime.InteropServices;
+﻿global using InterceptionContext = nint;
+global using InterceptionDevice = int;
+global using KeyList = System.Collections.Generic.List<Keys>;
+using Microsoft.VisualBasic.Devices;
+using static InterceptionInterop;
 
+#pragma warning disable CS8618 // Non-nullable field must contain a non-null value when exiting constructor. Consider adding the 'required' modifier or declaring as nullable.
+#pragma warning disable CS0649 // Field is never assigned to, and will always have its default value
 static class Interception
 {
-    public const int 
-        MaxKeyboard = 10,
-        MaxMouse = 10,
-        MaxDevice = MaxKeyboard + MaxMouse;
+    static bool isLeftMouseDown, isRightMouseDown;
+    static int keyboardDeviceID, mouseDeviceID;
+    static nint keyboard, mouse;
+    static public KeyList DownedKeys = new KeyList(256);
+    static public int LastMouseX, LastMouseY;
 
-    public static int Keyboard(int index) => index + 1;
+    static Thread driverupdaterkeyboard, driverupdatermouse;
 
-    public static int Mouse(int index) => MaxKeyboard + index + 1;
+    public static int MouseX => LastMouseX;
+    public static int MouseY => LastMouseY;
 
-    [Flags]
-    public enum Filter : ushort
+    static Interception()
     {
-        None = FilterKeyState.None,
-        All = FilterKeyState.All,
+#if DEBUG
+        return;
+#endif
 
-        KDown = FilterKeyState.Down,
-        KUp = FilterKeyState.Up,
-        KE0 = FilterKeyState.E0,
-        KE1 = FilterKeyState.E1,
-        KTermSrvSetLED = FilterKeyState.TermSrvSetLED,
-        KTermSrvShadow = FilterKeyState.TermSrvShadow,
-        KTermSrvVKPacket = FilterKeyState.TermSrvVKPacket,
+        keyboard = InterceptionInterop.CreateContext();
+        InterceptionInterop.SetFilter(keyboard, InterceptionInterop.IsKeyboard, InterceptionInterop.Filter.All);
 
-        MLeftButtonDown = FilterMouseState.LeftButtonDown,
-        MLeftButtonUp = FilterMouseState.LeftButtonUp,
-        MRightButtonDown = FilterMouseState.RightButtonDown,
-        MRightButtonUp = FilterMouseState.RightButtonUp,
-        MMiddleButtonDown = FilterMouseState.MiddleButtonDown,
-        MMiddleButtonUp = FilterMouseState.MiddleButtonUp,
+        mouse = InterceptionInterop.CreateContext();
+        InterceptionInterop.SetFilter(mouse, InterceptionInterop.IsMouse, InterceptionInterop.Filter.All);
 
-        MButton1Down = FilterMouseState.Button1Down,
-        MButton1Up = FilterMouseState.Button1Up,
-        MButton2Down = FilterMouseState.Button2Down,
-        MButton2Up = FilterMouseState.Button2Up,
-        MButton3Down = FilterMouseState.Button3Down,
-        MButton3Up = FilterMouseState.Button3Up,
+        (driverupdaterkeyboard = new(DriverKeyboardUpdater)
+        {
+            Priority = ThreadPriority.Highest
+        }).Start();
 
-        MButton4Down = FilterMouseState.Button4Down,
-        MButton4Up = FilterMouseState.Button4Up,
-        MButton5Down = FilterMouseState.Button5Down,
-        MButton5Up = FilterMouseState.Button5Up,
-
-        MWheel = FilterMouseState.Wheel,
-        MHWheel = FilterMouseState.HWheel,
-
-        MMove = FilterMouseState.Move
+        (driverupdatermouse = new(DriverMouseUpdaterBootstrapper)
+        {
+            Priority = ThreadPriority.Highest
+        }).Start();
     }
 
-    [UnmanagedFunctionPointer(CallingConvention.Cdecl)]
-    public delegate int Predicate(int device);
-
-    [Flags]
-    public enum KeyState : ushort
+    static Keys ToKey(InterceptionInterop.KeyStroke keyStroke)
     {
-        Down = 0x00,
-        Up = 0x01,
-        E0 = 0x02,
-        E1 = 0x04,
-        TermSrvSetLED = 0x08,
-        TermSrvShadow = 0x10,
-        TermSrvVKPacket = 0x20,
+        var result = keyStroke.Code;
+        if ((keyStroke.State & InterceptionInterop.KeyState.E0) != 0)
+            result += 0x100;
+        return (Keys)result;
     }
 
-    public static bool IsKeyDown(this KeyState keyState) => (keyState & KeyState.Up) == 0;
-
-    [Flags]
-    public enum FilterKeyState : ushort
+    static InterceptionInterop.KeyStroke ToKeyStroke(Keys key, bool down)
     {
-        None = 0x0000,
-        All = 0xFFFF,
-        Down = KeyState.Up,
-        Up = KeyState.Up << 1,
-        E0 = KeyState.E0 << 1,
-        E1 = KeyState.E1 << 1,
-        TermSrvSetLED = KeyState.TermSrvSetLED << 1,
-        TermSrvShadow = KeyState.TermSrvShadow << 1,
-        TermSrvVKPacket = KeyState.TermSrvVKPacket << 1
+        var result = new InterceptionInterop.KeyStroke();
+        if (!down)
+            result.State = InterceptionInterop.KeyState.Up;
+        var code = (short)key;
+        if (code >= 0x100)
+        {
+            code -= 0x100;
+            result.State |= InterceptionInterop.KeyState.E0;
+        }
+        else if (code < 0)
+        {
+            code += 100;
+            result.State |= InterceptionInterop.KeyState.E0;
+        }
+        result.Code = (ushort)code;
+        return result;
     }
 
-    [Flags]
-    public enum MouseState : ushort
+    static void DriverKeyboardUpdater()
     {
-        LeftButtonDown = 0x001,
-        LeftButtonUp = 0x002,
-        RightButtonDown = 0x004,
-        RightButtonUp = 0x008,
-        MiddleButtonDown = 0x010,
-        MiddleButtonUp = 0x020,
+        var stroke = new Stroke();
+        while (true)
+        {
+            try
+            {
+                while (Receive(keyboard, keyboardDeviceID = Wait(keyboard), ref stroke, 1) > 0)
+                {
+                    var key = ToKey(stroke.Key);
+                    var processed = false;
+                    if (stroke.Key.State.IsKeyDown())
+                    {
+                        switch (!DownedKeys.Contains(key))
+                        {
+                            case true:
+                                DownedKeys.Add(key);
+                                processed = InternalOnKeyDown(key, false);
+                                break;
+                            case false:
+                                processed = InternalOnKeyDown(key, true);
+                                break;
+                        }
+                    }
+                    else
+                    {
+                        DownedKeys.Remove(key);
+                        processed = InternalOnKeyUp(key);
+                    }
 
-        Button1Down = LeftButtonDown,
-        Button1Up = LeftButtonUp,
-        Button2Down = RightButtonDown,
-        Button2Up = RightButtonUp,
-        Button3Down = MiddleButtonDown,
-        Button3Up = MiddleButtonUp,
-
-        Button4Down = 0x040,
-        Button4Up = 0x080,
-        Button5Down = 0x100,
-        Button5Up = 0x200,
-
-        Wheel = 0x400,
-        HWheel = 0x800
+                    if (!processed)
+                        Send(keyboard, keyboardDeviceID, ref stroke, 1);
+                }
+            }
+            catch { }
+        }
     }
 
-    [Flags]
-    public enum FilterMouseState : ushort
-    {
-        None = 0x0000,
-        All = 0xFFFF,
-
-        LeftButtonDown = MouseState.LeftButtonDown,
-        LeftButtonUp = MouseState.LeftButtonUp,
-        RightButtonDown = MouseState.RightButtonDown,
-        RightButtonUp = MouseState.RightButtonUp,
-        MiddleButtonDown = MouseState.MiddleButtonDown,
-        MiddleButtonUp = MouseState.MiddleButtonUp,
-
-        Button1Down = MouseState.Button1Down,
-        Button1Up = MouseState.Button1Up,
-        Button2Down = MouseState.Button2Down,
-        Button2Up = MouseState.Button2Up,
-        Button3Down = MouseState.Button3Down,
-        Button3Up = MouseState.Button3Up,
-
-        Button4Down = MouseState.Button4Down,
-        Button4Up = MouseState.Button4Up,
-        Button5Down = MouseState.Button5Down,
-        Button5Up = MouseState.Button5Up,
-
-        Wheel = MouseState.Wheel,
-        HWheel = MouseState.HWheel,
-
-        Move = 0x1000
+    static void DriverMouseUpdaterBootstrapper()
+    {        
+        var stroke = new Stroke();
+        while (true)
+        {
+            try
+            {
+                while (Receive(mouse, mouseDeviceID = Wait(mouse), ref stroke, 1) > 0)
+                {
+                    var processed = false;
+                    switch (stroke.Mouse.State)
+                    {
+                        case MouseState.LeftButtonDown:
+                            isLeftMouseDown = true;
+                            processed = InternalOnKeyDown(Keys.MouseLeft, false);
+                            break;
+                        case MouseState.RightButtonDown:
+                            isRightMouseDown = true;
+                            processed = InternalOnKeyDown(Keys.MouseRight, false);
+                            break;
+                        case MouseState.MiddleButtonDown:
+                            processed = InternalOnKeyDown(Keys.MouseMiddle, false);
+                            break;
+                        case MouseState.Button4Down:
+                            processed = InternalOnKeyDown(Keys.Button1, false);
+                            break;
+                        case MouseState.Button5Down:
+                            processed = InternalOnKeyDown(Keys.Button2, false);
+                            break;
+                        case MouseState.LeftButtonUp:
+                            isLeftMouseDown = false;
+                            processed = InternalOnKeyUp(Keys.MouseLeft);
+                            break;
+                        case MouseState.RightButtonUp:
+                            isRightMouseDown = false;
+                            processed = InternalOnKeyUp(Keys.MouseRight);
+                            break;
+                        case MouseState.MiddleButtonUp:
+                            processed = InternalOnKeyUp(Keys.MouseMiddle);
+                            break;
+                        case MouseState.Button4Up:
+                            processed = InternalOnKeyUp(Keys.Button1);
+                            break;
+                        case MouseState.Button5Up:
+                            processed = InternalOnKeyUp(Keys.Button2);
+                            break;
+                        case MouseState.Wheel:
+                            processed = InternalOnMouseWheel(stroke.Mouse.Rolling);
+                            break;
+                    }
+                    processed = InternalOnMouseMove(stroke.Mouse.X, stroke.Mouse.Y);
+                    if (!processed)
+                        Send(mouse, mouseDeviceID, ref stroke, 1);
+                }
+            }
+            catch { }
+        }        
     }
 
-    [Flags]
-    public enum MouseFlag : ushort
+    public delegate bool OnMouseMoveDelegate(int x, int y);
+    public static OnMouseMoveDelegate? OnMouseMove;
+
+    public delegate bool OnMouseWheelDelegate(int rolling);
+    public static OnMouseWheelDelegate? OnMouseWheel;
+
+    public delegate bool OnKeyDownDelegate(Keys key, bool repeat);
+    public static OnKeyDownDelegate? OnKeyDown;
+
+    public delegate bool OnKeyUpDelegate(Keys key);
+    public static OnKeyUpDelegate? OnKeyUp;
+
+    static bool InternalOnMouseMove(int x, int y)
     {
-        MoveRelative = 0x000,
-        MoveAbsolute = 0x001,
-        VirturalDesktop = 0x002,
-        AttributesChanged = 0x004,
-        MoveNoCoalesce = 0x008,
-        TermSrvSrcShadow = 0x100
+        (LastMouseX, LastMouseY) = (x, y);
+        if (OnMouseMove != null)
+            return OnMouseMove(x, y);
+        return false;
     }
 
-    [StructLayout(LayoutKind.Sequential)]
-    public struct MouseStroke
+    static bool InternalOnMouseWheel(int rolling)
     {
-        public MouseState State;
-        public MouseFlag Flags;
-        public short Rolling;
-        public int X;
-        public int Y;
-        public uint Information;
+        if (OnMouseWheel != null)
+            return OnMouseWheel(rolling);
+        return false;
     }
 
-    [StructLayout(LayoutKind.Sequential)]
-    public struct KeyStroke
+    static bool InternalOnKeyDown(Keys key, bool repeat)
     {
-        public ushort Code;
-        public KeyState State;
-        public uint Information;
+        if (OnKeyDown != null)
+            return OnKeyDown(key, repeat);
+        return false;
     }
 
-    [StructLayout(LayoutKind.Explicit)]
-    public struct Stroke
+    static bool InternalOnKeyUp(Keys key)
     {
-        [FieldOffset(0)]
-        public MouseStroke Mouse;
-
-        [FieldOffset(0)]
-        public KeyStroke Key;
+        if (OnKeyUp != null)
+            return OnKeyUp(key);
+        return false;
     }
 
-    [DllImport("interception", CallingConvention = CallingConvention.Cdecl, EntryPoint = "interception_create_context")]
-    public static extern InterceptionContext CreateContext();
-    [DllImport("interception", CallingConvention = CallingConvention.Cdecl, EntryPoint = "interception_destroy_context")]
-    public static extern void DestroyContext(InterceptionContext context);
-    [DllImport("interception", CallingConvention = CallingConvention.Cdecl, EntryPoint = "interception_get_filter")]
-    public static extern Filter GetFilter(InterceptionContext context, InterceptionDevice deviceID);
-    [DllImport("interception", CallingConvention = CallingConvention.Cdecl, EntryPoint = "interception_set_filter")]
-    public static extern void SetFilter(InterceptionContext context, Predicate predicate, Filter filter);
-    [DllImport("interception", CallingConvention = CallingConvention.Cdecl, EntryPoint = "interception_wait")]
-    public static extern InterceptionDevice Wait(InterceptionContext context);
-    [DllImport("interception", CallingConvention = CallingConvention.Cdecl, EntryPoint = "interception_wait_with_timeout")]
-    public static extern InterceptionDevice WaitWithTimeout(InterceptionContext context, ulong milliseconds);
-    [DllImport("interception", CallingConvention = CallingConvention.Cdecl, EntryPoint = "interception_send")]
-    public static extern int Send(InterceptionContext context, InterceptionDevice deviceID, ref Stroke stroke, uint nstroke);
-    [DllImport("interception", CallingConvention = CallingConvention.Cdecl, EntryPoint = "interception_receive")]
-    public static extern int Receive(InterceptionContext context, InterceptionDevice deviceID, ref Stroke stroke, uint nstroke);
-    [DllImport("interception", CallingConvention = CallingConvention.Cdecl, EntryPoint = "interception_is_keyboard")]
-    public static extern int IsKeyboard(InterceptionDevice deviceID);
-    [DllImport("interception", CallingConvention = CallingConvention.Cdecl, EntryPoint = "interception_is_mouse")]
-    public static extern int IsMouse(InterceptionDevice deviceID);
+    #region Macros
+    public static void KeyClick(Keys key, int delay)
+    {
+        KeyDown(key);
+        Thread.Sleep(delay);
+        KeyUp(key);
+    }
+
+    public static bool IsLeftMouseDown() => isLeftMouseDown;
+
+    public static bool IsRightMouseDown() => isRightMouseDown;
+
+    public static bool IsKeyDown(int deviceID, Keys key) => DownedKeys.Contains(key);
+
+    public static bool IsKeyDown(Keys key) => IsKeyDown(keyboardDeviceID, key);
+
+    public static bool IsKeyUp(int deviceID, Keys key) => !IsKeyDown(deviceID, key);
+
+    public static bool IsKeyUp(Keys key) => IsKeyUp(keyboardDeviceID, key);
+
+    public static void KeyDown(int deviceID, params Keys[] keys)
+    {
+        foreach (var key in keys)
+        {
+            if (((short)key) < 0)
+            {
+                var stroke = new Stroke();
+                switch (key)
+                {
+                    case Keys.MouseLeft:
+                        stroke.Mouse.State = MouseState.LeftButtonUp;
+                        break;
+                    case Keys.MouseRight:
+                        stroke.Mouse.State = MouseState.RightButtonUp;
+                        break;
+                    case Keys.MouseMiddle:
+                        stroke.Mouse.State = MouseState.MiddleButtonUp;
+                        break;
+                    case Keys.Button1:
+                        stroke.Mouse.State = MouseState.Button4Up;
+                        break;
+                    case Keys.Button2:
+                        stroke.Mouse.State = MouseState.Button5Up;
+                        break;
+                }
+                Send(mouse, mouseDeviceID, ref stroke, 1);
+            }
+            else
+            {
+                var stroke = new Stroke();
+                stroke.Key = ToKeyStroke(key, true);
+                Send(keyboard, deviceID, ref stroke, 1);
+            }
+        }
+    }
+
+    public static void KeyDown(params Keys[] keys) => KeyDown(keyboardDeviceID, keys);
+
+    public static void KeyUp(int deviceID, params Keys[] keys)
+    {
+        foreach (var key in keys)
+        {
+            if (((short)key) < 0)
+            {
+                var stroke = new Stroke();
+                switch (key)
+                {
+                    case Keys.MouseLeft:
+                        stroke.Mouse.State = MouseState.LeftButtonDown;
+                        break;
+                    case Keys.MouseRight:
+                        stroke.Mouse.State = MouseState.RightButtonDown;
+                        break;
+                    case Keys.MouseMiddle:
+                        stroke.Mouse.State = MouseState.MiddleButtonDown;
+                        break;
+                    case Keys.Button1:
+                        stroke.Mouse.State = MouseState.Button4Down;
+                        break;
+                    case Keys.Button2:
+                        stroke.Mouse.State = MouseState.Button5Down;
+                        break;
+                }
+                Send(mouse, mouseDeviceID, ref stroke, 1);
+            }
+            else
+            {
+                var stroke = new Stroke();
+                stroke.Key = ToKeyStroke(key, false);
+                Send(keyboard, deviceID, ref stroke, 1);
+            }
+        }
+    }
+
+    public static void KeyUp(params Keys[] keys) => KeyUp(keyboardDeviceID, keys);
+
+    public static void MouseScroll(int deviceID, short rolling)
+    {
+        var stroke = new Stroke();
+        stroke.Mouse.State = MouseState.Wheel;
+        stroke.Mouse.Rolling = rolling;
+        Send(mouse, deviceID, ref stroke, 1);
+    }
+
+    public static void MouseScroll(short rolling) => MouseScroll(mouseDeviceID, rolling);
+
+    public static void MouseMove(int deviceID, int x, int y)
+    {
+        var stroke = new Stroke();
+        stroke.Mouse.X = x;
+        stroke.Mouse.Y = y;
+        stroke.Mouse.Flags = MouseFlag.MoveRelative;
+        Send(mouse, deviceID, ref stroke, 1);
+    }
+
+    public static void MouseSet(int deviceID, int x, int y)
+    {
+        var stroke = new Stroke();
+        stroke.Mouse.X = x;
+        stroke.Mouse.Y = y;
+        stroke.Mouse.Flags = MouseFlag.MoveAbsolute;
+        Send(mouse, deviceID, ref stroke, 1);
+    }
+
+    public static void MouseMove(int x, int y) => MouseMove(mouseDeviceID, x, y);
+
+    public static void MouseSet(int x, int y) => MouseSet(mouseDeviceID, x, y);
+    #endregion
 }

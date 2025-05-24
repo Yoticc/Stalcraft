@@ -122,38 +122,42 @@ abstract class Window
 
     public Bitmap DumpBounds()
     {
-        const int xmult = ConsoleManagement.CharWidth;
-        const int ymult = ConsoleManagement.CharHeight;
+        const int xmult = Console.CharWidth;
+        const int ymult = Console.CharHeight;
 
         var bitmap = new Bitmap(Width * xmult, Height * ymult);
         var graphics = Graphics.FromImage(bitmap);
 
-        graphics.FillRectangle(new SolidBrush(Color.FromArgb(31, 31, 31)), new Rectangle(0, 0, bitmap.Width, bitmap.Height));
+        var backgroundColor = Color.FromArgb(31, 31, 31);
+        var backgroundBrush = new SolidBrush(backgroundColor);
+        graphics.FillRectangle(backgroundBrush, new Rectangle(0, 0, bitmap.Width, bitmap.Height));
 
         for (var i = 0; i < Controls.Count; i++)
         {
             var control = Controls[i];
-            DrawBounds(graphics, control, 0);
+            DrawBounds(0);
+
+            void DrawBounds(int depth)
+            {
+                var bounds = control.AbsoluteBounds;
+                var grayScale = byte.MaxValue - depth * 32;
+                var color = Color.FromArgb(grayScale, grayScale, grayScale);
+                var pen = new Pen(color, 2);
+                var rectangle = Rectangle.FromLTRB(bounds.Left * xmult, bounds.Top * ymult, bounds.Right * xmult, bounds.Bottom * ymult);
+                //graphics.FillRectangle(backgroundBrush, rectangle);
+                graphics.DrawRectangle(pen, rectangle);
+
+                depth++;
+                var controls = control.Controls;
+                for (var i = 0; i < controls.Count; i++)
+                {
+                    control = controls[i];
+                    DrawBounds(depth);
+                }
+            }
         }
 
         return bitmap;
-
-        static void DrawBounds(Graphics graphics, Control control, int depth)
-        {
-            var bounds = control.AbsoluteBounds;
-            var grayScale = byte.MaxValue - depth * 32;
-            var pen = new Pen(Color.FromArgb(grayScale, grayScale, grayScale), 2);
-            var rectangle = Rectangle.FromLTRB(bounds.Left * xmult, bounds.Top * ymult, bounds.Right * xmult, bounds.Bottom * ymult);
-            graphics.DrawRectangle(pen, rectangle);
-
-            depth++;
-            var controls = control.Controls;
-            for (var i = 0; i < controls.Count; i++)
-            {
-                control = controls[i];
-                DrawBounds(graphics, control, depth);
-            }
-        }
     }
 
     Control? lastHoveredControl;

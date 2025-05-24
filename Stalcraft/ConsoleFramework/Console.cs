@@ -2,7 +2,7 @@
 using Microsoft.Win32.SafeHandles;
 using System.Text;
 
-static unsafe class ConsoleManagement
+static unsafe class Console
 {
     public const int CharWidth = 8, CharHeight = 12;
 
@@ -68,7 +68,7 @@ static unsafe class ConsoleManagement
         var windowHandle = Kernel32.GetConsoleWindow();
         if (windowHandle == 0)
             DebugTools.Debug("ConsoleApp: No console window found. Probably because the debugger is running");
-        else WindowManagement.SetWindowHandle(windowHandle);
+        else ConsoleWindow.SetWindowHandle(windowHandle);
     }
 
     public static StreamWriter InitializeOutStream()
@@ -78,8 +78,8 @@ static unsafe class ConsoleManagement
 
         var fileStream = CreateFileStream("CONOUT$", GENERIC_WRITE, FILE_SHARE_WRITE, FileAccess.Write);
         var streamWriter = new StreamWriter(fileStream) { AutoFlush = true };
-        Console.SetOut(streamWriter);
-        Console.SetError(streamWriter);
+        System.Console.SetOut(streamWriter);
+        System.Console.SetError(streamWriter);
 
         return streamWriter;
     }
@@ -91,7 +91,7 @@ static unsafe class ConsoleManagement
 
         var fileStream = CreateFileStream("CONIN$", GENERIC_READ, FILE_SHARE_READ, FileAccess.Read);
         var streamReader = new StreamReader(fileStream);
-        Console.SetIn(streamReader);
+        System.Console.SetIn(streamReader);
 
         return streamReader;
     }
@@ -143,11 +143,11 @@ static unsafe class ConsoleManagement
 
     public static void SetFont(string fontName, int size) => Kernel32.SetConsoleFont(OutputHandle, fontName, size);
 
-    public static void SetWindowSize(int width, int height) => (WindowWidth, WindowHeight) = (Console.WindowWidth, Console.WindowHeight) = (width, height);
+    public static void SetWindowSize(int width, int height) => (WindowWidth, WindowHeight) = (System.Console.WindowWidth, System.Console.WindowHeight) = (width, height);
     public static void SetBufferSize(int width, int height)
     {
-        (BufferWidth, BufferHeight) = (Console.BufferWidth, Console.BufferHeight) = (width, height);
-        WindowManagement.RedrawWindow();
+        (BufferWidth, BufferHeight) = (System.Console.BufferWidth, System.Console.BufferHeight) = (width, height);
+        ConsoleWindow.RedrawWindow();
     }
 
     public static void Write(char symbol, int x = int.MaxValue, int y = int.MaxValue) => Write(symbol.ToString(), x , y);

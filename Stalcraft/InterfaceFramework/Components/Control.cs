@@ -5,15 +5,12 @@ delegate void ControlEventArgs(Control sender);
 
 abstract class Control
 {
-    public Control(Point? location = null, Size? size = null, IEnumerable<Control>? controls = null)
+    public Control(Point location = default, Size size = default, IEnumerable<Control>? controls = null)
     {
         Dispatcher = new ControlDispatcher(this);
 
-        if (location.HasValue)
-            SetLocation(location.Value);
-
-        if (size.HasValue)
-            Size = size.Value;
+        SetLocation(location, silence: true);
+        SetSize(size, silence: true);
 
         if (controls is not null)
             AddControls(controls);
@@ -36,6 +33,8 @@ abstract class Control
     public int Width => Size.Width;
     public int Height => Size.Height;
 
+    public Point ClientLocation => ClientBounds.Location;
+
     public Point AbsoluteLocation
     {
         get
@@ -43,7 +42,7 @@ abstract class Control
             if (Parent is null)
                 return Location;
 
-            var parentLocation = Parent.ClientBounds.Location;
+            var parentLocation = Parent.AbsoluteClientLocation;
             var location = Location;
 
             var absoluteLocation = new Point(parentLocation.X + location.X, parentLocation.Y + location.Y);
@@ -51,11 +50,23 @@ abstract class Control
         }
     }
 
-    // LocalBounds and GlobalBounds
+    public Point AbsoluteClientLocation
+    {
+        get
+        {
+            if (Parent is null)
+                return ClientLocation;
+
+            var parentLocation = Parent.AbsoluteClientLocation;
+            var location = ClientLocation;
+
+            var absoluteLocation = new Point(parentLocation.X + location.X, parentLocation.Y + location.Y);
+            return absoluteLocation;
+        }
+    }
+
     public Rectangle Bounds => new(Location, Size);
     public Rectangle AbsoluteBounds => new Rectangle(AbsoluteLocation, Size);
-
-    public Rectangle ParentAbsoluteBounds => Parent is null ? Application.Bounds : Parent.AbsoluteBounds;
 
     public virtual Rectangle ClientBounds => new(Location, Size);
 
@@ -111,7 +122,7 @@ abstract class Control
 
         OnDraw();
         foreach (var control in Controls)
-            control.OnDraw();
+            control.Draw();
     }
 
     void InternalAddControl(Control control)

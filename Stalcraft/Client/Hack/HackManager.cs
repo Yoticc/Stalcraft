@@ -1,14 +1,8 @@
 ﻿using ScreenCapture;
-using System.Diagnostics.CodeAnalysis;
 
+delegate void HackTurnedDelegate(Hack hack);
 static class HackManager
 {
-    public delegate void HackTurnedDelegate(Hack hack);
-    public static HackTurnedDelegate? HackTurned;
-
-    [AllowNull] public static InterceptionManager Macro { get; private set; }
-    public static void SetMacro(InterceptionManager macro) => Macro = macro;
-
     public static readonly List<Hack> Hacks = new List<Hack>()
     {
         new AimbotHack(),
@@ -17,7 +11,7 @@ static class HackManager
         new SmartStealHack()
     }.OrderBy(l => -l.Name.Length).ToList();
 
-    public static void InitHacks()
+    static HackManager()
     {
         var hacks = Hacks;
         for (var index = 0; index < hacks.Count; index++)
@@ -29,6 +23,8 @@ static class HackManager
             hack.SetInitIndex(index);
         }
     }
+
+    public static HackTurnedDelegate? HackTurned;
 
     public static bool ShouldCaptureFrame()
     {

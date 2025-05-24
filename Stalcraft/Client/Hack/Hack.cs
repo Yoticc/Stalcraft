@@ -14,8 +14,6 @@ abstract class Hack
 
     public Action? HackTurned;
 
-    public InterceptionManager Macro => HackManager.Macro;
-
     public string Name { get; private init; }
     public Keys? DefaultKeybind { get; private init; }
     public Keys? Keybind { get; private set; }

@@ -3,13 +3,13 @@
 class BorderedPanel : Panel
 {
     public BorderedPanel(
-        Point? location = null,
-        Size? size = null,
+        Point location = default,
+        Size size = default,
         ConsoleBackgroundColor backgroundColor = default,
         ConsoleTextStyles borderStyles = default,
         PanelBorderStyle borderStyle = default,
         IEnumerable<Control>? controls = null
-    ) : base(location, size is null ? null : new Size(size.Value.Width + 2, size.Value.Height + 2), backgroundColor, controls)
+    ) : base(location, size == default ? default : new Size(size.Width + 2, size.Height + 2), backgroundColor, controls)
     {
         BorderStyles = borderStyles;
         PanelBorderStyle = borderStyle;

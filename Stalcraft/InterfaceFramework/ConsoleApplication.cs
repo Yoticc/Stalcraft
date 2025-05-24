@@ -3,10 +3,8 @@
 #pragma warning disable CS0618 // Type or member is obsolete
 unsafe class ConsoleApplication
 {
-    public ConsoleApplication(InterceptionManager manager)
+    public ConsoleApplication()
     {
-        this.manager = manager;
-
         AllocateConsole();
         SetupConsole();
         SetupWindow();
@@ -14,29 +12,28 @@ unsafe class ConsoleApplication
         StartMouseEvents();
     }
 
-    public string Title { get => Console.Title; private set => Console.Title = value; }
+    public string Title { get => System.Console.Title; private set => System.Console.Title = value; }
     public int Width { get; private set; }
     public int Height { get; private set; }
     public Rectangle Bounds => new Rectangle(new Point(0, 0), new Size(Width, Height));
 
-    InterceptionManager manager;
     Window? runnedWindow;
     public nint ActiveWindowHandle;
     bool isClientWindowActive;
 
-    void AllocateConsole() => ConsoleManagement.AllocateConsole();
+    void AllocateConsole() => Console.AllocateConsole();
 
     void SetupConsole()
     {
-        ConsoleManagement.CursorVisible = false;
-        ConsoleManagement.QuickEditFeature = false;
-        ConsoleManagement.VirtualTerminalProcessingFeature = true;
+        Console.CursorVisible = false;
+        Console.QuickEditFeature = false;
+        Console.VirtualTerminalProcessingFeature = true;
 
-        ConsoleManagement.SetFont("Consolas", 16);
+        Console.SetFont("Consolas", 16);
     }
 
     void SetupWindow() =>
-        WindowManagement.WindowStyles =
+        ConsoleWindow.WindowStyles =
             WindowStyles.Visible |
             WindowStyles.Border |
             WindowStyles.DlgFrame |
@@ -46,10 +43,10 @@ unsafe class ConsoleApplication
     {
         (Width, Height) = (width, height);
 
-        ConsoleManagement.SetWindowSize(width, height);
-        ConsoleManagement.SetBufferSize(width + 32, height + 32);
+        Console.SetWindowSize(width, height);
+        Console.SetBufferSize(width + 32, height + 32);
 
-        WindowManagement.ShowScrollbar = false;
+        ConsoleWindow.ShowScrollbar = false;
     }
 
     void OnMouseMove(int x, int y)
@@ -112,7 +109,7 @@ unsafe class ConsoleApplication
 
     void StartMouseEvents()
     {
-        manager.OnKeyUp += key => 
+        Interception.OnKeyUp += key => 
         {
             OnKeyUp(key);
             return false;
@@ -147,7 +144,7 @@ unsafe class ConsoleApplication
     bool mouseIsEntered;
     void HandlersBody()
     {
-        var hwnd = WindowManagement.WindowHandle;
+        var hwnd = ConsoleWindow.WindowHandle;
 
         while (true)
         {
@@ -161,7 +158,7 @@ unsafe class ConsoleApplication
                 continue;
             }
 
-            windowRectangle = WindowManagement.ClientRectangle;
+            windowRectangle = ConsoleWindow.ClientRectangle;
             var newCursorPosition = User32.GetCursorPosition();
 
             if (cursorPosition != newCursorPosition)
@@ -214,7 +211,7 @@ unsafe class ConsoleApplication
         SetTitle($"[{title}]");
     }
 
-    public void ClearBuffer() => ConsoleManagement.Clear();
+    public void ClearBuffer() => Console.Clear();
 
     public void DrawText(Control painter, ConsoleText text, int x, int y)
     {
@@ -225,7 +222,7 @@ unsafe class ConsoleApplication
         DrawText(text, x, y);
     }
 
-    public void DrawText(ConsoleText text, int x, int y) => ConsoleManagement.Write(text, x, y);
+    public void DrawText(ConsoleText text, int x, int y) => Console.Write(text, x, y);
 
     public void DrawText(Control painter, ConsoleMultistyleText text, int x, int y)
     {
@@ -236,7 +233,7 @@ unsafe class ConsoleApplication
         DrawText(text, x, y);
     }
 
-    public void DrawText(ConsoleMultistyleText text, int x, int y) => ConsoleManagement.Write(text, x, y);
+    public void DrawText(ConsoleMultistyleText text, int x, int y) => Console.Write(text, x, y);
 
     public void Fill(Control painter, ConsoleTextStyles styles, char fillChar) => Fill(painter.AbsoluteBounds, styles, fillChar);
 
@@ -251,7 +248,7 @@ unsafe class ConsoleApplication
         for (; y < ey; y++)
             text.Add(part, x, y);
 
-        ConsoleManagement.Write(text);
+        Console.Write(text);
     }
 
     public void DrawBorder(Control painter, ConsoleTextStyles borderStyles, PanelBorderStyle panelBorderStyle, ConsoleBackgroundColor backgroundColor)
@@ -290,6 +287,6 @@ unsafe class ConsoleApplication
 
         text.Add(horizontalLinePart, x, y + height - 1);
 
-        ConsoleManagement.Write(text);
+        Console.Write(text);
     }
 }

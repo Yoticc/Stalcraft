@@ -16,7 +16,7 @@ class MultistyleLabel : Control
     private protected override void OnMouseLeftClick() => MouseLeftClick?.Invoke(this);
     private protected override void OnMouseRightClick() => MouseRightClick?.Invoke(this);
 
-    public MultistyleLabel(ConsoleMultistyleText text, Point? location = null) : base(location: location, size: new(0, 1)) => SetText(text);
+    public MultistyleLabel(ConsoleMultistyleText text, Point location = default) : base(location: location, size: new(0, 1)) => SetText(text);
 
     public ConsoleMultistyleText Text { get; private set; }
 

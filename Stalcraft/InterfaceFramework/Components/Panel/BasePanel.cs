@@ -3,8 +3,8 @@
 class BasePanel : Control
 {
     public BasePanel(
-        Point? location = null,
-        Size? size = null,
+        Point location = default,
+        Size size = default,
         ConsoleBackgroundColor backgroundColor = default,
         IEnumerable<Control>? controls = null
     ) : base(location, size, controls)

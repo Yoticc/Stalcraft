@@ -17,7 +17,7 @@ class Label : Control
     private protected override void OnMouseLeftClick() => MouseLeftClick?.Invoke(this);
     private protected override void OnMouseRightClick() => MouseRightClick?.Invoke(this);
 
-    public Label(ConsoleText text, Point? location = null) : base(location: location, size: new(0, 1)) => SetText(text);
+    public Label(ConsoleText text, Point location = default) : base(location: location, size: new(0, 1)) => SetText(text);
 
     [AllowNull] public ConsoleText Text { get; private set; }
 

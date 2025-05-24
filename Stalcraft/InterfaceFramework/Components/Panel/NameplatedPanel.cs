@@ -4,8 +4,8 @@ class NameplatedPanel : BorderedPanel
 {
     public NameplatedPanel(
         ConsoleText nameplateText,
-        Point? location = null, 
-        Size? size = null,
+        Point location = default, 
+        Size size = default,
         ConsoleBackgroundColor backgroundColor = default,
         ConsoleTextStyles borderStyles = default,
         PanelBorderStyle panelBorderStyle = default,
