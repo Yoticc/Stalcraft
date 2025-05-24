@@ -55,15 +55,27 @@ class Slider : Control
 
     private protected override void OnDraw()
     {
-        var text = $"[{new string('-', simpleValue)}o{new string(' ', NumberOfDevisions - simpleValue)}]";
-        var consoleText = new ConsoleText(text);
-        ConsoleApplication.DrawText(this, consoleText);
+        var text = new ConsoleMultistyleText();
 
-        text = Value.ToString();
-        consoleText = new ConsoleText(text: text, styles: ConsoleForegroundColor.Gray);
+        text.AddFlex(new(text: "[", styles: ConsoleForegroundColor.Gray));
+        var valueText = new ConsoleText(Value.ToString(), styles: ConsoleForegroundColor.Gray);
         if (simpleValue > (NumberOfDevisions / 2))
-            ConsoleApplication.DrawText(this, consoleText, 1, 0);
-        else ConsoleApplication.DrawText(this, consoleText, Width - 1 - text.Length, 0);
+        {
+            text.AddFlex(valueText);
+            text.AddFlex(new(text: new string('-', simpleValue - valueText.Length), styles: ConsoleForegroundColor.Gray));
+            text.AddFlex(new(text: "o", styles: ConsoleForegroundColor.Gray));
+            text.AddFlex(new(text: new string(' ', NumberOfDevisions - simpleValue)));
+        }
+        else
+        {
+            text.AddFlex(new(text: new string('-', simpleValue), styles: ConsoleForegroundColor.Gray));
+            text.AddFlex(new(text: "o", styles: ConsoleForegroundColor.Gray));
+            text.AddFlex(new(text: new string(' ', NumberOfDevisions - simpleValue - valueText.Length)));
+            text.AddFlex(valueText);
+        }
+        text.AddFlex(new(text: "]", styles: ConsoleForegroundColor.Gray));
+
+        ConsoleApplication.DrawText(this, text);
     }
 
     int GetNearestSimpleValueTo(int value) => (int)((float)(value - MinValue) / differenceValue * NumberOfDevisions);

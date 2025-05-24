@@ -1,6 +1,6 @@
 ﻿#pragma warning disable CS8629 // Nullable value type may be null.
 #pragma warning disable CS8618 // Non-nullable field must contain a non-null value when exiting constructor. Consider adding the 'required' modifier or declaring as nullable.
-class MainWindow : Window
+unsafe class MainWindow : Window
 {
     public MainWindow() : base("Stalcraft client", 51, 7) { }
 
@@ -56,17 +56,27 @@ class MainWindow : Window
                 borderStyles: ConsoleForegroundColor.Gray
             );
 
-            var copaq = new OptionPanel(optionsPanel, optionName: "copaq", location: new(0, 0))
+            var copaq = new OptionPanel(optionsPanel, optionName: "copaq", minValue: 40, maxValue: 100, defaultValue: *HackManager.Config->ClientWindowOpacity, location: new(0, 0))
             {
-                ValueChange = opacity => ConsoleWindow.Opacity = opacity
+                ValueChange = opacity => *HackManager.Config->ClientWindowOpacity = ConsoleWindow.Opacity = opacity
             };
 
-            var gopaq = new OptionPanel(optionsPanel, optionName: "gopaq", location: new(0, 1));
+            var gopaq = new OptionPanel(optionsPanel, optionName: "gopaq", minValue: 40, maxValue: 100, defaultValue: *HackManager.Config->StalcraftWindowOpacity, location: new(0, 1))
+            {
+                ValueChange = opacity => *HackManager.Config->StalcraftWindowOpacity = opacity
+            };
 
             var defaults = new Button(text: new(text: "default", styles: ConsoleForegroundColor.Gray), location: new(optionsPanel.Width - 9, 3))
             {
                 MouseEnter = button => button.SetStyle(ConsoleForegroundColor.White),
-                MouseLeave = button => button.SetStyle(ConsoleForegroundColor.Gray)
+                MouseLeave = button => button.SetStyle(ConsoleForegroundColor.Gray),
+                MouseLeftClick = button =>
+                {
+                    HackManager.Config->SetOptionsToDefault();
+
+                    copaq.SetValue(*HackManager.Config->ClientWindowOpacity);
+                    gopaq.SetValue(*HackManager.Config->StalcraftWindowOpacity);
+                }
             };
 
             optionsPanel.AddControls(copaq, gopaq, defaults);

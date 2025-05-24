@@ -22,6 +22,8 @@
     public void Add(ConsoleText part, int x, int y) => Parts.Add(part with { X = x, Y = y });
     public void Add(ConsoleText part) => Parts.Add(part);
 
+    public void AddFlex(ConsoleText part) => Parts.Add(part with { X = Length });
+
     public void AddStyle(ConsoleTextStyles setStyles)
     {
         for (var i = 0; i < Parts.Count; i++)

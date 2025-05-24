@@ -1,4 +1,4 @@
-﻿class HackListPanel : Panel, IDisposable
+﻿unsafe class HackListPanel : Panel, IDisposable
 {
     public HackListPanel() : base(size: new(22, HackManager.Hacks.Count))
     {

@@ -1,6 +1,6 @@
 ﻿class AntiRecoilHack : Hack
 {
-    public AntiRecoilHack() : base("anti recoil", Keys.U)
+    public AntiRecoilHack() : base("anti recoil")
     {
 
     }

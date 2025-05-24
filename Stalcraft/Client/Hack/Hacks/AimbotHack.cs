@@ -4,7 +4,7 @@
     public const int TAB_HEIGHT_PADDING = 22;
     public const int TAB_POINTER_LENGTH = 5;
 
-    public AimbotHack() : base("aimbot", Keys.Y) { }
+    public AimbotHack() : base("aimbot") { }
 
     public static AimbotTab? DetectTab(SlicedMemoryBitmap bitmap)
     {

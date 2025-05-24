@@ -1,12 +1,10 @@
 ﻿using ScreenCapture;
 
-abstract class Hack
+abstract unsafe class Hack
 {
-    public Hack(string name, Keys defaultKeybind = default)
+    public Hack(string name)
     {
         Name = name;
-        Keybind = DefaultKeybind = defaultKeybind;
-
         Dispatcher = new(this);
     }
 
@@ -16,13 +14,19 @@ abstract class Hack
 
     public string Name { get; private init; }
     public Keys DefaultKeybind { get; private init; }
-    public Keys Keybind { get; private set; }
+    public Keys* KeybindPointer { get; private set; }
+    public Keys Keybind { get => *KeybindPointer; private set => *KeybindPointer = value; }
     public int InitIndex { get; private set; }
 
-    public bool IsEnabled { get; private set; }
+    public bool* IsEnabledPointer { get; private set; }
+    public bool IsEnabled { get => *IsEnabledPointer; private set => *IsEnabledPointer = value; }
     public bool HasKeybind => Keybind != default;
 
-    public void SetKeybind(Keys key) => Keybind = key;
+    public void SetIsEnabledPointer(bool* pointer) => IsEnabledPointer = pointer;
+
+    public void SetKeybindPointer(Keys* key) => KeybindPointer = key;
+
+    public void SetKeybind(Keys key) => *KeybindPointer = key;
 
     public void SetInitIndex(int index) => InitIndex = index;
 

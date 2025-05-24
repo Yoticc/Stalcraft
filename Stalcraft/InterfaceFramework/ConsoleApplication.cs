@@ -246,6 +246,12 @@ unsafe static class ConsoleApplication
 
     public static void DrawText(ConsoleText text, int x, int y) => Console.Write(text, x, y);
 
+    public static void DrawText(Control painter, ConsoleMultistyleText text)
+    {
+        var painterLocation = painter.AbsoluteLocation;
+        DrawText(text, painterLocation.X, painterLocation.Y);
+    }
+
     public static void DrawText(Control painter, ConsoleMultistyleText text, int x, int y)
     {
         var painterLocation = painter.AbsoluteLocation;
