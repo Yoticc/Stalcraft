@@ -2,7 +2,7 @@
 #pragma warning disable CS8618 // Non-nullable field must contain a non-null value when exiting constructor. Consider adding the 'required' modifier or declaring as nullable.
 class MainWindow : Window
 {
-    public MainWindow() : base("Stalcraft client", 50, 7) { }
+    public MainWindow() : base("Stalcraft client", 51, 7) { }
 
     OverlayWindow overlayWindow;
     HackListPanel hackListPanel;
@@ -23,7 +23,7 @@ class MainWindow : Window
 
             nameplatedHacksPanel = new NameplatedPanel(
                 nameplateText: new(text: "hacks", styles: ConsoleForegroundColor.Gray),
-                location: new(0, 1),
+                location: new(1, 1),
                 size: new(24, 4),
                 panelBorderStyle: PanelBorderStyle.ASCII,
                 borderStyles: ConsoleForegroundColor.Gray
@@ -50,13 +50,17 @@ class MainWindow : Window
         {
             var optionsPanel = new NameplatedPanel(
                 nameplateText: new(text: "options", styles: ConsoleForegroundColor.Gray),
-                location: new(28, 1),
+                location: new(29, 1),
                 size: new(20, 4),
                 panelBorderStyle: PanelBorderStyle.ASCII,
                 borderStyles: ConsoleForegroundColor.Gray
             );
 
-            var copaq = new OptionPanel(optionsPanel, optionName: "copaq", location: new(0, 0));
+            var copaq = new OptionPanel(optionsPanel, optionName: "copaq", location: new(0, 0))
+            {
+                ValueChange = opacity => ConsoleWindow.Opacity = opacity
+            };
+
             var gopaq = new OptionPanel(optionsPanel, optionName: "gopaq", location: new(0, 1));
 
             var defaults = new Button(text: new(text: "default", styles: ConsoleForegroundColor.Gray), location: new(optionsPanel.Width - 9, 3))

@@ -56,6 +56,7 @@ unsafe static class ConsoleApplication
         Console.SetBufferSize(width + 32, height + 32);
 
         ConsoleWindow.ShowScrollbar = false;
+        ConsoleWindow.RemoveUnusedConsoleSpace();
     }
 
     static void OnMouseMove(int x, int y)
@@ -226,6 +227,12 @@ unsafe static class ConsoleApplication
             linesText.Add(lineText with { Y = y });
 
         Console.Write(linesText);
+    }
+
+    public static void DrawText(Control painter, ConsoleText text)
+    {
+        var painterLocation = painter.AbsoluteLocation;
+        DrawText(text, painterLocation.X, painterLocation.Y);
     }
 
     public static void DrawText(Control painter, ConsoleText text, int x, int y)

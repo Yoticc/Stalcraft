@@ -46,6 +46,11 @@ static class ConsoleWindow
         }
     }
 
+    public static int Opacity
+    {
+        set => User32.SetWindowOpacity(WindowHandle, value);
+    }
+
     public static bool ShowScrollbar
     {
         set => User32.ShowScrollBar(windowHandle, 3, value);
@@ -89,4 +94,33 @@ static class ConsoleWindow
     }
 
     public static void SetWindowSize(int width, int height) => User32.SetWindowSize(windowHandle, width, height);
+
+    public static void SetWindowRegion(Rectangle rectangle)
+    {
+        using var region = Gdi32.CreateRegion(rectangle);
+        SetWindowRegion(region);
+    }
+
+    public static void SetWindowRegion(GdiRegion region) => User32.SetWindowRegion(windowHandle, region, true);
+
+    static bool nowIsCustomRegion;
+    public static void RemoveUnusedConsoleSpace()
+    {
+        var windowRectangle = WindowRectangle;
+        var clippedWindowRectangle = new Rectangle(0, 0, windowRectangle.Width - Console.CharWidth, windowRectangle.Height - Console.CharHeight);
+        SetWindowRegion(clippedWindowRectangle);
+        nowIsCustomRegion = true;
+    }
+
+    public static void ResetWindowRegion()
+    {
+        SetWindowRegion(GdiRegion.Empty);
+        nowIsCustomRegion = false;
+    }
+
+    public static void ResetCurtomRegion()
+    {
+        if (nowIsCustomRegion)
+            ResetWindowRegion();
+    }
 }

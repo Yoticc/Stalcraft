@@ -6,10 +6,13 @@ static unsafe class User32
 {
     const string user = "user32";
 
+    [DllImport(user)] public  static extern int SetLayeredWindowAttributes(nint hwnd, uint crkey, byte alpha, uint flags);
     [DllImport(user)] public static extern bool SetWindowPos(nint hwnd, nint type, int x, int y, int width, int height, SetWindowPosFlags flags);
     [DllImport(user)] public static extern int SetWindowLongPtr(nint hwnd, WindowLongIndex index, uint newLong);
     [DllImport(user)] public static extern int MessageBox(nint hWnd, string text, string caption, uint type);
     [DllImport(user)] public static extern nint GetWindowLongPtr(nint hWnd, WindowLongIndex index);
+    [DllImport(user)] public static extern int SetWindowRgn(nint hwnd, nint rregion, bool redraw);
+    [DllImport(user)] public static extern bool ShowScrollBar(nint hwnd, int bar, bool show);
     [DllImport(user)] public static extern bool GetClientRect(nint hwnd, int* rectangle);
     [DllImport(user)] public static extern bool GetWindowRect(nint hwnd, int* rectangle);
     [DllImport(user)] public static extern bool ClientToScreen(nint hwnd, Point* point);
@@ -19,7 +22,8 @@ static unsafe class User32
     [DllImport(user)] public static extern nint GetForegroundWindow();
     [DllImport(user)] public static extern bool SetProcessDPIAware();
     [DllImport(user)] public static extern nint GetDesktopWindow();
-    [DllImport(user)] public static extern bool ShowScrollBar(nint hwnd, int bar, bool show);
+
+    public static void SetWindowRegion(nint hwnd, GdiRegion regionHandle, bool redraw) => SetWindowRgn(hwnd, *(nint*)&regionHandle, redraw);
 
     public static bool IsKeyPressed(int key) => ((1 << 15) & GetAsyncKeyState(key)) != 0;
 
@@ -34,6 +38,11 @@ static unsafe class User32
 
     public static WindowStyles GetWindowStyles(nint hwnd) => (WindowStyles)GetWindowLongPtr(hwnd, WindowLongIndex.Style);
     public static void SetWindowStyles(nint hwnd, WindowStyles style) => SetWindowLongPtr(hwnd, WindowLongIndex.Style, (uint)style);
+
+    public static WindowExStyles GetWindowExStyles(nint hwnd) => (WindowExStyles)GetWindowLongPtr(hwnd, WindowLongIndex.ExStyle);
+    public static void SetWindowExStyles(nint hwnd, WindowExStyles style) => SetWindowLongPtr(hwnd, WindowLongIndex.ExStyle, (uint)style);
+
+    public static void SetWindowOpacity(nint hwnd, float percent) => SetLayeredWindowAttributes(hwnd, 0, (byte)((float)percent / 100 * byte.MaxValue), 0x02/*ALPHA*/);
 
     public static Point GetCursorPosition()
     {
