@@ -1,5 +1,4 @@
-﻿using System.Diagnostics.CodeAnalysis;
-using System.Drawing;
+﻿using System.Drawing;
 
 abstract class Window
 {
@@ -12,7 +11,6 @@ abstract class Window
 
     public WindowDispatcher Dispatcher;
 
-    [AllowNull] public ConsoleApplication Application;
     public Window? PreviousWindow;
     public Window? NextWindow;
 
@@ -26,8 +24,12 @@ abstract class Window
     
     public void Open()
     {
-        Application.UpdateTitle();
+        ConsoleApplication.SetCurrentWindow(this);
+        ConsoleApplication.ClearAndSetSize(Width, Height);
+
+        Dispatcher.InvokeOnInit();
         Draw();
+        Dispatcher.InvokeOnOpen();
     }
 
     public void OpenAsChild(Window window)
@@ -35,15 +37,8 @@ abstract class Window
         if (window is null)
             throw new ArgumentNullException("window");
 
-        if (window.Application is not null)
-        {
-            DebugTools.Debug($"opening a window as a child that has already been opened");
-            return;
-        }
-
         NextWindow = window;
         window.PreviousWindow = this;
-        window.Application = Application;
         window.Open();
     }
 
@@ -68,7 +63,6 @@ abstract class Window
         }
 
         previousWindow.NextWindow = null;
-        Application = null;
         PreviousWindow = null;
         NextWindow = null;
 
@@ -80,7 +74,6 @@ abstract class Window
         if (!IsInitialized)
             return;
 
-        Application.ClearBuffer();
         OnDraw();
 
         foreach (var control in Controls)
@@ -144,7 +137,6 @@ abstract class Window
                 var color = Color.FromArgb(grayScale, grayScale, grayScale);
                 var pen = new Pen(color, 2);
                 var rectangle = Rectangle.FromLTRB(bounds.Left * xmult, bounds.Top * ymult, bounds.Right * xmult, bounds.Bottom * ymult);
-                //graphics.FillRectangle(backgroundBrush, rectangle);
                 graphics.DrawRectangle(pen, rectangle);
 
                 depth++;

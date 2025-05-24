@@ -67,7 +67,7 @@
             nameLabel.SetStyle(style);
 
             var text = new ConsoleMultistyleText();
-            text.Add(text: " [", styles: ConsoleForegroundColor.DarkGray);
+            text.Add(text: "[", styles: ConsoleForegroundColor.DarkGray);
 
             var nullableKeybind = hack.Keybind;
             if (nullableKeybind.HasValue)
@@ -84,8 +84,8 @@
         void OnKeybindMouseClick(HackKeybindLabel label, Hack hack)
         {
             var text = new ConsoleMultistyleText();
-            text.Add(text: " [", styles: ConsoleForegroundColor.DarkGray);
-            text.Add(text: "...", styles: ConsoleForegroundColor.DarkGray | ConsoleTextStyles.Awaiting);
+            text.Add(text: "[", styles: ConsoleForegroundColor.DarkGray);
+            text.Add(text: "...", styles: ConsoleForegroundColor.Gray | ConsoleTextStyles.Awaiting);
             text.Add(text: "]", styles: ConsoleForegroundColor.DarkGray);
             label.SetText(text);
 

@@ -23,24 +23,27 @@ class Label : Control
 
     private protected override void OnDraw()
     {
-        Application.DrawText(this, Text, 0, 0);
+        ConsoleApplication.DrawText(this, Text, 0, 0);
 
         base.OnDraw();
     }
 
     public void SetText(ConsoleText text)
     {
+        var oldText = Text;
         Text = text;
-        
+
         SetWidth(width: text.Length, silence: true);
-        Redraw();
+
+        if (oldText.Length == text.Length)
+            Draw();
+        else Redraw();
     }
 
     public void SetStyle(ConsoleTextStyles styles)
     {
         Text = Text with { Styles = styles };
-
-        Redraw();
+        Draw();
     }
 
     public void AddStyle(ConsoleTextStyles setStyles)
@@ -48,7 +51,7 @@ class Label : Control
         var text = Text;
         var styles = text.Styles | setStyles;
         Text = text with { Styles = styles };
-        Redraw();
+        Draw();
     }
 
     public void RemoveStyle(ConsoleTextStyles setStyles)
@@ -56,7 +59,7 @@ class Label : Control
         var text = Text;
         var styles = text.Styles & ~setStyles;
         Text = text with { Styles = styles };
-        Redraw();
+        Draw();
     }
 
     public void SetStyle(ConsoleTextStyles setStyles, bool flag)

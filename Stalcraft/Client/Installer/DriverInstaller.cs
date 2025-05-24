@@ -1,6 +1,6 @@
 ﻿using System.Security.Principal;
 
-class Installer
+class DriverInstaller
 {
     public static void EnsureInstalled()
     {

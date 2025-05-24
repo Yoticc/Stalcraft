@@ -8,6 +8,9 @@
     {
         get
         {
+            if (Parts is null)
+                return 0;
+
             var length = 0;
             foreach (var part in Parts)
                 length += part.Length;
@@ -57,7 +60,7 @@ record struct ConsoleText
     public string Text;
     public ConsoleTextStyles Styles;
 
-    public int Length => Text.Length;
+    public int Length => Text is null ? 0 : Text.Length;
 
     public static readonly ConsoleText Empty = new(string.Empty);
 }

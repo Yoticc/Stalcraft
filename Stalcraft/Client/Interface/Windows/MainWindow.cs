@@ -4,95 +4,56 @@ class MainWindow : Window
 {
     public MainWindow() : base("Stalcraft client", 46, 8) { }
 
+    OverlayWindow overlayWindow;
     HackListPanel hackListPanel;
+    NameplatedPanel nameplatedHacksPanel;
+    Button closeButton;
+    Button pinButton;
 
     private protected override void OnInit()
     {
-        AddButtons();
-        AddHacks();
-        AddOptionsPanel();
+        InitHacks();
+        InitOverlay();
+        InitButtons();
+        InitOptionsPanel();
 
-        void AddButtons()
+        new Thread(() =>
         {
-            LabelEventArgs hideHeaderEvent = sender => sender.SetStyle(
-                !ConsoleWindow.Header 
-                ? ConsoleForegroundColor.DarkGreen 
-                : sender.IsHoveredByMouse
-                  ? ConsoleForegroundColor.Red 
-                  : ConsoleForegroundColor.DarkRed
-            );
+            Thread.Sleep(500);
 
-            var location = Width - 5;
 
-            var hideHeaderButton = new Label(
-                location: new(location, 0),
-                text: new(text: "z", styles: ConsoleForegroundColor.DarkRed)
-            )
-            { 
-                MouseEnter = hideHeaderEvent,
-                MouseLeave = hideHeaderEvent,
-                MouseLeftClick = sender =>
-                {
-                    ConsoleWindow.Header = !ConsoleWindow.Header;
-                    hideHeaderEvent(sender);
-                }
-            };
+        }).Start();
 
-            LabelEventArgs topmostEvent = sender => sender.SetStyle(
-                ConsoleWindow.Topmost
-                ? ConsoleForegroundColor.DarkGreen
-                : sender.IsHoveredByMouse
-                  ? ConsoleForegroundColor.Red
-                  : ConsoleForegroundColor.DarkRed
-            );
-
-            var topmostButton = new Label(
-                location: new(location += 2, 0),
-                text: new(text: "v", styles: ConsoleForegroundColor.DarkRed)
-            )
-            {
-                MouseEnter = topmostEvent,
-                MouseLeave = topmostEvent,
-                MouseLeftClick = sender =>
-                {
-                    ConsoleWindow.Topmost = !ConsoleWindow.Topmost;
-                    topmostEvent(sender);
-                }
-            };
-
-            LabelEventArgs closeEvent = sender => sender.SetStyle(
-                sender.IsHoveredByMouse
-                ? ConsoleForegroundColor.Red
-                : ConsoleForegroundColor.DarkRed
-            );
-            var closeButton = new Label(
-                location: new(location += 2, 0),
-                text: new(text: "o", styles: ConsoleForegroundColor.DarkRed)
-            );
-            closeButton.MouseEnter += closeEvent;
-            closeButton.MouseLeave += closeEvent;
-            closeButton.MouseLeftClick += sender => Environment.Exit(0);
-
-            AddControls(hideHeaderButton, topmostButton, closeButton);
-        }
-
-        void AddHacks()
+        void InitHacks()
         {
             hackListPanel = new HackListPanel();
 
-            var nameplatedHacksPanel = new NameplatedPanel(
+            nameplatedHacksPanel = new NameplatedPanel(
                 nameplateText: new(text: "hacks", styles: ConsoleForegroundColor.DarkYellow),
                 location: new(0, 1),
                 size: new(24, 4),
                 panelBorderStyle: PanelBorderStyle.ASCII,
-                borderStyles: ConsoleForegroundColor.DarkYellow,
-                controls: [hackListPanel]
+                borderStyles: ConsoleForegroundColor.DarkYellow
             );
 
+            AppearHacks();
             AddControls(nameplatedHacksPanel);
         }
 
-        void AddOptionsPanel()
+        void InitOverlay()
+        {
+            overlayWindow = new OverlayWindow(hackListPanel);
+        }
+
+        void InitButtons()
+        {
+            closeButton = new CloseButton(location: new(Width - 1, 0));
+            pinButton = new PinButton(this, overlayWindow, location: new(Width - 3, 0));
+
+            AddControls(closeButton, pinButton);
+        }
+
+        void InitOptionsPanel()
         {
             var optionsPanel = new NameplatedPanel(
                 nameplateText: new(text: "options", styles: ConsoleForegroundColor.DarkGreen),
@@ -106,4 +67,8 @@ class MainWindow : Window
             AddControls(optionsPanel);
         }
     }
+
+    public void DisappearHacks() => nameplatedHacksPanel.RemoveControl(hackListPanel);
+
+    public void AppearHacks() => nameplatedHacksPanel.AddControl(hackListPanel);
 }

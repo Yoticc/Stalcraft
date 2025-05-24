@@ -11,8 +11,7 @@ class Panel : BasePanel
 
     private protected override void OnDraw()
     {
-        if (BackgroundColor != default)
-            Application.Fill(this, BackgroundColor, ' ');
+        ConsoleApplication.Fill(this, BackgroundColor, ' ');
 
         base.OnDraw();
     }

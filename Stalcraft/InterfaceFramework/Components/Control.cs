@@ -21,8 +21,7 @@ abstract class Control
     public ControlDispatcher Dispatcher;
     public readonly List<Control> Controls = new List<Control>();
 
-    public ConsoleApplication Application => Window.Application;
-    public bool IsInitialized => Window is not null && Application is not null;
+    public bool IsInitialized => Window is not null;
     public bool HasParent => Parent is not null;
 
     public Point Location { get; private set; }
@@ -110,6 +109,9 @@ abstract class Control
 
     public void Redraw()
     {
+        if (!IsInitialized)
+            return;
+
         if (Parent is not null)
             Parent.Draw();
         else Draw();

@@ -5,8 +5,6 @@ VisualStudioVersion = 17.12.35506.116
 MinimumVisualStudioVersion = 10.0.40219.1
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Stalcraft", "Stalcraft\Stalcraft.csproj", "{8AA17C1E-5135-4139-A1A4-B6380E2F43BC}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "PreventDebugAux", "PreventDebugAux\PreventDebugAux.csproj", "{4818830D-315C-4FB9-8824-81CDFD8783C1}"
-EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "ScreenCapture", "..\ScreenCapture\ScreenCapture\ScreenCapture.csproj", "{B910D668-487E-4BCD-8534-E17DD97246AB}"
 EndProject
 Global
@@ -19,10 +17,6 @@ Global
 		{8AA17C1E-5135-4139-A1A4-B6380E2F43BC}.Debug|x64.Build.0 = Debug|x64
 		{8AA17C1E-5135-4139-A1A4-B6380E2F43BC}.Release|x64.ActiveCfg = Release|x64
 		{8AA17C1E-5135-4139-A1A4-B6380E2F43BC}.Release|x64.Build.0 = Release|x64
-		{4818830D-315C-4FB9-8824-81CDFD8783C1}.Debug|x64.ActiveCfg = Debug|x64
-		{4818830D-315C-4FB9-8824-81CDFD8783C1}.Debug|x64.Build.0 = Debug|x64
-		{4818830D-315C-4FB9-8824-81CDFD8783C1}.Release|x64.ActiveCfg = Release|x64
-		{4818830D-315C-4FB9-8824-81CDFD8783C1}.Release|x64.Build.0 = Release|x64
 		{B910D668-487E-4BCD-8534-E17DD97246AB}.Debug|x64.ActiveCfg = Debug|x64
 		{B910D668-487E-4BCD-8534-E17DD97246AB}.Debug|x64.Build.0 = Debug|x64
 		{B910D668-487E-4BCD-8534-E17DD97246AB}.Release|x64.ActiveCfg = Release|x64

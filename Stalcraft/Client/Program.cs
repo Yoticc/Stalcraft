@@ -3,6 +3,6 @@ if (System.Diagnostics.Debugger.IsAttached)
     return;
 #endif
 
-Installer.EnsureInstalled();
+DriverInstaller.EnsureInstalled();
 
-new ClientProgram().Main();
+ConsoleApplication.Run<MainWindow>();

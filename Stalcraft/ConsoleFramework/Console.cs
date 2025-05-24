@@ -301,7 +301,7 @@ static unsafe class Console
         }
     }
 
-    public static void Clear()
+    public static void VT100Clear()
     {
         const int ClearBufferTV100Command = '\e' | '[' << 8 | '2' << 16 | 'J' << 24;
 

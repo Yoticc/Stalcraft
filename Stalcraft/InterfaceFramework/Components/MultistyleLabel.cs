@@ -22,7 +22,7 @@ class MultistyleLabel : Control
 
     private protected override void OnDraw()
     {
-        Application.DrawText(this, Text, 0, 0);
+        ConsoleApplication.DrawText(this, Text, 0, 0);
 
         base.OnDraw();
     }
@@ -33,19 +33,22 @@ class MultistyleLabel : Control
         Text = text;
 
         SetWidth(width: text.Length, silence: true);
-        Redraw();
+
+        if (oldText.Length == text.Length)
+            Draw();
+        else Redraw();
     }
 
     public void AddStyle(ConsoleTextStyles setStyles)
     {
         Text.AddStyle(setStyles);
-        Redraw();
+        Draw();
     }
 
     public void RemoveStyle(ConsoleTextStyles setStyles)
     {
         Text.RemoveStyle(setStyles);
-        Redraw();
+        Draw();
     }
 
     public void SetStyle(ConsoleTextStyles setStyles, bool flag)

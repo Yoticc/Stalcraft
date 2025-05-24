@@ -22,8 +22,8 @@ class BorderedPanel : Panel
 
     private protected override void OnDraw()
     {
-        Application.DrawBorder(this, BorderStyles, PanelBorderStyle, BackgroundColor);
-
         base.OnDraw();
+
+        ConsoleApplication.DrawBorder(this, BorderStyles, PanelBorderStyle, BackgroundColor);
     }
 }
