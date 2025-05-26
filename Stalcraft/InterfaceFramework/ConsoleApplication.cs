@@ -18,17 +18,6 @@ unsafe static class ConsoleApplication
     public static nint ActiveWindowHandle;
     static bool isClientWindowActive;
 
-    static Point windowCaughtLocation;
-    static bool isWindowCaught;
-
-    public static void CatchWindow()
-    {
-        //windowCaughtLocation = ConsoleWindow.WindowRectangle.Location;
-        //isWindowCaught = true;
-    }
-
-    public static void UncatchWindow() => isWindowCaught = false;
-
     static void AllocateConsole() => Console.AllocateConsole();
 
     static void SetupConsole()
@@ -58,13 +47,6 @@ unsafe static class ConsoleApplication
     {
         if (currentWindow is null)
             return;
-
-        if (isWindowCaught)
-        {
-            var location = windowCaughtLocation;
-            windowCaughtLocation = location = new Point(location.X + x, location.Y + y);
-            ConsoleWindow.SetWindowLocation(location.X, location.Y);
-        }
 
         currentWindow.Dispatcher.InvokeOnMouseRelativeMove(x, y);
     }

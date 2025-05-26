@@ -61,7 +61,7 @@ unsafe class MainWindow : Window
 
             nameplatedHacksPanel = new NameplatedPanel(
                 nameplateText: new(text: "hacks", styles: ConsoleForegroundColor.Gray),
-                location: new(1, 2),
+                location: new(1, 1),
                 size: new(24, 4),
                 borderStyles: ConsoleForegroundColor.Gray
             );
@@ -77,18 +77,17 @@ unsafe class MainWindow : Window
 
         void Initheader()
         {
-            var header = new HeaderLabel(Width - 5);
             closeButton = new CloseButton(location: new(Width - 2, 0));
             pinButton = new PinButton(this, overlayWindow, location: new(Width - 4, 0));
 
-            AddControls(header, closeButton, pinButton);
+            AddControls(closeButton, pinButton);
         }
 
         void InitOptions()
         {
             var optionsPanel = new NameplatedPanel(
                 nameplateText: new(text: "options", styles: ConsoleForegroundColor.Gray),
-                location: new(29, 2),
+                location: new(29, 1),
                 size: new(20, 4),
                 borderStyles: ConsoleForegroundColor.Gray
             );
@@ -140,7 +139,7 @@ unsafe class MainWindow : Window
         {
             nameplatedSettingsPanel = new(
                 nameplateText: new(text: "settings", styles: ConsoleForegroundColor.Gray),
-                location: new(1, 9),
+                location: new(1, 8),
                 size: new(48, 5),
                 borderStyles: ConsoleForegroundColor.Gray
             );

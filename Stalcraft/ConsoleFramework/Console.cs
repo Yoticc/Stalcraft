@@ -61,121 +61,6 @@ static unsafe class Console
         set => Kernel32.SetConsoleCursorInfo(OutputHandle, value);
     }
 
-    [StructLayout(LayoutKind.Sequential)]
-    public struct MSG
-    {
-        public IntPtr hwnd;
-        public int message;
-        public IntPtr wParam;
-        public IntPtr lParam;
-        public int time;
-        public int pt_x;
-        public int pt_y;
-    }
-
-    class Program
-    {
-        [DllImport("user32.dll")]
-        static extern IntPtr CreateWindowEx(
-            int dwExStyle,
-            string lpClassName,
-            string lpWindowName,
-            int dwStyle,
-            int x,
-            int y,
-            int nWidth,
-            int nHeight,
-            IntPtr hWndParent,
-            IntPtr hMenu,
-            IntPtr hInstance,
-            IntPtr lpParam);
-
-        [DllImport("user32.dll")]
-        static extern bool ShowWindow(IntPtr hWnd, int nCmdShow);
-
-        [DllImport("user32.dll")]
-        static extern bool UpdateWindow(IntPtr hWnd);
-
-        [DllImport("user32.dll")]
-        static extern IntPtr DefWindowProc(IntPtr hWnd, int Msg, IntPtr wParam, IntPtr lParam);
-
-        [DllImport("user32.dll")]
-        static extern IntPtr DispatchMessage(ref MSG msg);
-
-        [DllImport("kernel32.dll")]
-        static extern IntPtr GetModuleHandle(string lpModuleName);
-
-        [DllImport("user32.dll", SetLastError = true)]
-        static extern IntPtr SetParent(IntPtr hWndChild, IntPtr hWndNewParent);
-
-        const int WS_OVERLAPPEDWINDOW = 0x00C00000;
-        const int WS_VISIBLE = 0x10000000;
-        const int WM_DESTROY = 0x0002;
-        const int WM_QUIT = 0x0012;
-        const int SW_SHOW = 5;
-
-        static IntPtr hWnd;
-        static IntPtr hInstance;
-
-        private const int WM_NCHITTEST = 0x0084;
-        private const int HTCLIENT = 1;
-        private const int HTCAPTION = 2;
-
-        public static void Main2()
-        {
-            hInstance = GetModuleHandle(null);
-
-            hWnd = CreateWindowEx(
-                0,
-                "Static",
-                string.Empty,
-                WS_VISIBLE,
-                100,
-                100,
-                ClientWidth,
-                ClientHeight,
-                IntPtr.Zero,
-                IntPtr.Zero,
-                hInstance,
-                IntPtr.Zero);
-
-            //SetParent(ConsoleWindow.WindowHandle, hWnd);
-
-            User32.SetWindowStyles(hWnd, WindowStyles.Visible | WindowStyles.TabStop | WindowStyles.DlgFrame | WindowStyles.Border | WindowStyles.Maximize | WindowStyles.SystemMenu);
-
-            ShowWindow(hWnd, 1);
-
-            
-            new Thread(() =>
-            {
-                while (true)
-                {
-                    Thread.Sleep(1000);
-                    User32.ReleaseCapture();
-                    User32.SendMessage(hWnd, 0xA1, 0x02, 0x00);
-                }
-            }).Start();
-
-            MSG msg;
-            while (true)
-            {
-                if (PeekMessage(out msg, IntPtr.Zero, 0, 0, 1))
-                {
-                    TranslateMessage(ref msg);
-                    DispatchMessage(ref msg);
-
-                    User32.DefWindowProc(hWnd, msg.message, msg.wParam, msg.lParam);
-                }
-            }
-        }
-
-        [DllImport("user32.dll")]
-        static extern bool PeekMessage(out MSG msg, IntPtr hWnd, int wMsgFilterMin, int wMsgFilterMax, int wRemoveMsg);
-
-        [DllImport("user32.dll")]
-        static extern bool TranslateMessage(ref MSG msg);
-    }
-
     public static void AllocateConsole()
     {
         User32.SetProcessDPIAware();
@@ -189,13 +74,6 @@ static unsafe class Console
         if (windowHandle == 0)
             DebugTools.Debug("ConsoleApp: No console window found. Probably because the debugger is running");
         else ConsoleWindow.WindowHandle = windowHandle;
-
-        
-        new Thread(() =>
-        {
-            Program.Main2();
-        }).Start();
-        
     }
 
     public static StreamWriter InitializeOutStream()
