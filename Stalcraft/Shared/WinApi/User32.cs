@@ -1,15 +1,17 @@
-﻿using Microsoft.Win32;
-using System.Drawing;
+﻿using System.Drawing;
 using System.Runtime.InteropServices;
 
 static unsafe class User32
 {
     const string user = "user32";
 
-    [DllImport(user)] public  static extern int SetLayeredWindowAttributes(nint hwnd, uint crkey, byte alpha, uint flags);
     [DllImport(user)] public static extern bool SetWindowPos(nint hwnd, nint type, int x, int y, int width, int height, SetWindowPosFlags flags);
+    [DllImport(user)] public static extern nint CallWindowProc(nint wndproc, nint hwnd, int msg, nint wParam, nint lParam);
+    [DllImport(user)] public static extern int SetLayeredWindowAttributes(nint hwnd, uint crkey, byte alpha, uint flags);
     [DllImport(user)] public static extern int SetWindowLongPtr(nint hwnd, WindowLongIndex index, uint newLong);
     [DllImport(user)] public static extern int MessageBox(nint hWnd, string text, string caption, uint type);
+    [DllImport(user)] public static extern nint DefWindowProc(nint hwnd, int msg, nint wParam, nint lParam);
+    [DllImport(user)] public static extern nint SendMessage(nint hwnd, int msg, nint wParam, nint lParam);
     [DllImport(user)] public static extern nint GetWindowLongPtr(nint hWnd, WindowLongIndex index);
     [DllImport(user)] public static extern int SetWindowRgn(nint hwnd, nint rregion, bool redraw);
     [DllImport(user)] public static extern bool ShowScrollBar(nint hwnd, int bar, bool show);
@@ -22,6 +24,7 @@ static unsafe class User32
     [DllImport(user)] public static extern nint GetForegroundWindow();
     [DllImport(user)] public static extern bool SetProcessDPIAware();
     [DllImport(user)] public static extern nint GetDesktopWindow();
+    [DllImport(user)] public static extern bool ReleaseCapture();
 
     public static void SetWindowRegion(nint hwnd, GdiRegion regionHandle, bool redraw) => SetWindowRgn(hwnd, *(nint*)&regionHandle, redraw);
 
@@ -87,6 +90,15 @@ static unsafe class User32
         return client;
     }
 
+    public static Point GetDiffenceBetweenWindowAndScreen(nint hwnd)
+    {
+        var window = GetWindowRectangle(hwnd).Location;
+        var screen = GetWindowScreenRectangle(hwnd).Location;
+
+        var difference = new Point(screen.X - window.X, screen.Y - window.Y);
+        return difference;
+    }
+
     public static (int Width, int Height) GetMonitorResolution()
     {
         var desktopHwnd = GetDesktopWindow();
@@ -94,4 +106,8 @@ static unsafe class User32
         GetWindowRect(desktopHwnd, rect);
         return (rect[2], rect[3]);
     }
+
+    public static int HorizontalScrollbarWidth => GetSystemMetrics(SystemMetric.CXVSCROLL);
+
+    public static int VerticalScrollbarWidth => GetSystemMetrics(SystemMetric.CYHSCROLL);
 }

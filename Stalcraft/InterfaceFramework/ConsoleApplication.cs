@@ -1,5 +1,4 @@
-﻿using System.Diagnostics.SymbolStore;
-using System.Drawing;   
+﻿using System.Drawing;
 
 #pragma warning disable CS0618 // Type or member is obsolete
 unsafe static class ConsoleApplication
@@ -10,18 +9,25 @@ unsafe static class ConsoleApplication
         SetupConsole();
         SetupWindow();
         StartHandlersTask();
-        StartMouseEvents();
+        RegisterInterceptionEvents();
     }
+        
+    public static Rectangle Bounds => new Rectangle(new Point(0, 0), new Size(Console.Width, Console.Height));
 
-    public static string Title { get => System.Console.Title; private set => System.Console.Title = value; }
-    public static int Width { get; private set; }
-    public static int Height { get; private set; }
-    public static Rectangle Bounds => new Rectangle(new Point(0, 0), new Size(Width, Height));
-
-    static Window? runnedWindow;
     static Window? currentWindow;
     public static nint ActiveWindowHandle;
     static bool isClientWindowActive;
+
+    static Point windowCaughtLocation;
+    static bool isWindowCaught;
+
+    public static void CatchWindow()
+    {
+        //windowCaughtLocation = ConsoleWindow.WindowRectangle.Location;
+        //isWindowCaught = true;
+    }
+
+    public static void UncatchWindow() => isWindowCaught = false;
 
     static void AllocateConsole() => Console.AllocateConsole();
 
@@ -32,29 +38,35 @@ unsafe static class ConsoleApplication
         Console.VirtualTerminalProcessingFeature = true;
 
         Console.SetFont("Consolas", 16);
-        System.Console.Title = string.Empty;
     }
 
-    static void SetupWindow() =>
-        ConsoleWindow.WindowStyles =
-            WindowStyles.Visible |
-            WindowStyles.Border |
-            WindowStyles.DlgFrame;
-
-    public static void ClearAndSetSize(int width, int height)
+    static void SetupWindow()
     {
-        VT100Clear();
-        SetSize(width, height);
+        ConsoleWindow.WindowStyles = WindowStyles.Visible;
+
+        ConsoleWindowState.State = ConsoleWindowState.Default;
     }
 
     public static void SetSize(int width, int height)
     {
-        (Width, Height) = (width, height);
+        VT100Clear();
+        Console.ApplySize(width, height);
+        ConsoleWindowWorkspace.EnsureStateIsApplied();
+    }
 
-        Console.SetWindowSize(width, height);
-        Console.SetBufferSize(width + 32, height + 32);
+    static void OnMouseRelativeMove(int x, int y)
+    {
+        if (currentWindow is null)
+            return;
 
-        ConsoleWindow.ShowScrollbar = false;
+        if (isWindowCaught)
+        {
+            var location = windowCaughtLocation;
+            windowCaughtLocation = location = new Point(location.X + x, location.Y + y);
+            ConsoleWindow.SetWindowLocation(location.X, location.Y);
+        }
+
+        currentWindow.Dispatcher.InvokeOnMouseRelativeMove(x, y);
     }
 
     static void OnMouseMove(int x, int y)
@@ -117,7 +129,7 @@ unsafe static class ConsoleApplication
 
     static void StartHandlersTask() => new Thread(HandlersBody).Start();
 
-    static void StartMouseEvents()
+    static void RegisterInterceptionEvents()
     {
         Interception.OnKeyUp += key => 
         {
@@ -131,6 +143,12 @@ unsafe static class ConsoleApplication
                 return false;
 
             OnKeyDown(key);
+            return false;
+        };
+
+        Interception.OnMouseMove += (x, y) =>
+        {
+            OnMouseRelativeMove(x, y);
             return false;
         };
     }
@@ -207,7 +225,6 @@ unsafe static class ConsoleApplication
 
     public static void Run(Window masterWindow)
     {
-        runnedWindow = masterWindow;
         SetCurrentWindow(masterWindow);
         masterWindow.Open();
     }
@@ -215,17 +232,6 @@ unsafe static class ConsoleApplication
     public static void SetCurrentWindow(Window window) => currentWindow = window;
 
     public static void VT100Clear() => Console.VT100Clear();
-
-    public static void Clear()
-    {
-        var line = new string(' ', Width);
-        var lineText = new ConsoleText(line);
-        var linesText = new ConsoleMultistyleText(lineText);
-        for (var y = 0; y < Height; y++)
-            linesText.Add(lineText with { Y = y });
-
-        Console.Write(linesText);
-    }
 
     public static void DrawText(Control painter, ConsoleText text)
     {

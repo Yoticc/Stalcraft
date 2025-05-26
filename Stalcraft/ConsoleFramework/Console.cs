@@ -1,15 +1,18 @@
 ﻿using System.Runtime.CompilerServices;
 using Microsoft.Win32.SafeHandles;
 using System.Text;
+using System.Runtime.InteropServices;
+using System.Windows.Forms;
 
 static unsafe class Console
 {
     public const int CharWidth = 8, CharHeight = 12;
 
-    public static int BufferWidth { get; private set; }
-    public static int BufferHeight { get; private set; }
-    public static int WindowWidth { get; private set; }
-    public static int WindowHeight { get; private set; }
+    public static int Width { get; private set; } = 100;
+    public static int Height { get; private set; } = 30;
+
+    public static int ClientWidth => Width * CharWidth;
+    public static int ClientHeight => Height * CharHeight;
 
     public static nint InputHandle
     {
@@ -58,17 +61,141 @@ static unsafe class Console
         set => Kernel32.SetConsoleCursorInfo(OutputHandle, value);
     }
 
+    [StructLayout(LayoutKind.Sequential)]
+    public struct MSG
+    {
+        public IntPtr hwnd;
+        public int message;
+        public IntPtr wParam;
+        public IntPtr lParam;
+        public int time;
+        public int pt_x;
+        public int pt_y;
+    }
+
+    class Program
+    {
+        [DllImport("user32.dll")]
+        static extern IntPtr CreateWindowEx(
+            int dwExStyle,
+            string lpClassName,
+            string lpWindowName,
+            int dwStyle,
+            int x,
+            int y,
+            int nWidth,
+            int nHeight,
+            IntPtr hWndParent,
+            IntPtr hMenu,
+            IntPtr hInstance,
+            IntPtr lpParam);
+
+        [DllImport("user32.dll")]
+        static extern bool ShowWindow(IntPtr hWnd, int nCmdShow);
+
+        [DllImport("user32.dll")]
+        static extern bool UpdateWindow(IntPtr hWnd);
+
+        [DllImport("user32.dll")]
+        static extern IntPtr DefWindowProc(IntPtr hWnd, int Msg, IntPtr wParam, IntPtr lParam);
+
+        [DllImport("user32.dll")]
+        static extern IntPtr DispatchMessage(ref MSG msg);
+
+        [DllImport("kernel32.dll")]
+        static extern IntPtr GetModuleHandle(string lpModuleName);
+
+        [DllImport("user32.dll", SetLastError = true)]
+        static extern IntPtr SetParent(IntPtr hWndChild, IntPtr hWndNewParent);
+
+        const int WS_OVERLAPPEDWINDOW = 0x00C00000;
+        const int WS_VISIBLE = 0x10000000;
+        const int WM_DESTROY = 0x0002;
+        const int WM_QUIT = 0x0012;
+        const int SW_SHOW = 5;
+
+        static IntPtr hWnd;
+        static IntPtr hInstance;
+
+        private const int WM_NCHITTEST = 0x0084;
+        private const int HTCLIENT = 1;
+        private const int HTCAPTION = 2;
+
+        public static void Main2()
+        {
+            hInstance = GetModuleHandle(null);
+
+            hWnd = CreateWindowEx(
+                0,
+                "Static",
+                string.Empty,
+                WS_VISIBLE,
+                100,
+                100,
+                ClientWidth,
+                ClientHeight,
+                IntPtr.Zero,
+                IntPtr.Zero,
+                hInstance,
+                IntPtr.Zero);
+
+            //SetParent(ConsoleWindow.WindowHandle, hWnd);
+
+            User32.SetWindowStyles(hWnd, WindowStyles.Visible | WindowStyles.TabStop | WindowStyles.DlgFrame | WindowStyles.Border | WindowStyles.Maximize | WindowStyles.SystemMenu);
+
+            ShowWindow(hWnd, 1);
+
+            
+            new Thread(() =>
+            {
+                while (true)
+                {
+                    Thread.Sleep(1000);
+                    User32.ReleaseCapture();
+                    User32.SendMessage(hWnd, 0xA1, 0x02, 0x00);
+                }
+            }).Start();
+
+            MSG msg;
+            while (true)
+            {
+                if (PeekMessage(out msg, IntPtr.Zero, 0, 0, 1))
+                {
+                    TranslateMessage(ref msg);
+                    DispatchMessage(ref msg);
+
+                    User32.DefWindowProc(hWnd, msg.message, msg.wParam, msg.lParam);
+                }
+            }
+        }
+
+        [DllImport("user32.dll")]
+        static extern bool PeekMessage(out MSG msg, IntPtr hWnd, int wMsgFilterMin, int wMsgFilterMax, int wRemoveMsg);
+
+        [DllImport("user32.dll")]
+        static extern bool TranslateMessage(ref MSG msg);
+    }
+
     public static void AllocateConsole()
     {
         User32.SetProcessDPIAware();
         Kernel32.AllocConsole();
         InitializeOutStream();
         InitializeInStream();
+        System.Console.Title = string.Empty;
+        (System.Console.WindowWidth, System.Console.WindowHeight) = (System.Console.BufferWidth, System.Console.BufferHeight) = (120, 30);
 
         var windowHandle = Kernel32.GetConsoleWindow();
         if (windowHandle == 0)
             DebugTools.Debug("ConsoleApp: No console window found. Probably because the debugger is running");
-        else ConsoleWindow.SetWindowHandle(windowHandle);
+        else ConsoleWindow.WindowHandle = windowHandle;
+
+        
+        new Thread(() =>
+        {
+            Program.Main2();
+        }).Start();
+        
     }
 
     public static StreamWriter InitializeOutStream()
@@ -143,12 +270,7 @@ static unsafe class Console
 
     public static void SetFont(string fontName, int size) => Kernel32.SetConsoleFont(OutputHandle, fontName, size);
 
-    public static void SetWindowSize(int width, int height) => (WindowWidth, WindowHeight) = (System.Console.WindowWidth, System.Console.WindowHeight) = (width, height);
-    public static void SetBufferSize(int width, int height)
-    {
-        (BufferWidth, BufferHeight) = (System.Console.BufferWidth, System.Console.BufferHeight) = (width, height);
-        ConsoleWindow.RedrawWindow();        
-    }
+    public static void ApplySize(int width, int height) => (Width, Height) = (width, height);
 
     public static void Write(char symbol, int x = int.MaxValue, int y = int.MaxValue) => Write(symbol.ToString(), x , y);
 
@@ -293,7 +415,7 @@ static unsafe class Console
                 return false;
             }
 
-            if (x >= WindowWidth || y >= WindowHeight)
+            if (x >= Width || y >= Height)
                 return false;
 
             x++; y++;

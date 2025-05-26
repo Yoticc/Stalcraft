@@ -3,6 +3,7 @@ using System.Drawing;
 
 delegate void ControlEventArgs(Control sender);
 delegate void ControlDragEventArgs(Control sender, int x, int y);
+delegate void ControlMouseMoveEventArgs(Control sender, int x, int y);
 
 abstract class Control
 {
@@ -71,6 +72,7 @@ abstract class Control
     public virtual Rectangle ClientBounds => new(Location, Size);
 
     public bool IsHoveredByMouse { get; private set; }
+    public bool IsInDragState { get; private set; }
 
     public ControlEventArgs? MouseEnter;
     public ControlEventArgs? MouseLeave;
@@ -80,6 +82,7 @@ abstract class Control
     public ControlEventArgs? MouseLeftUp;
     public ControlEventArgs? MouseRightClick;
     public ControlDragEventArgs? MouseDrag;
+    public ControlMouseMoveEventArgs? MouseRelativeMove;
 
     public void SetWindow(Window? window)
     {
@@ -182,6 +185,7 @@ abstract class Control
     private protected virtual void OnMouseLeftUp() => MouseLeftUp?.Invoke(this);
     private protected virtual void OnMouseRightClick() => MouseRightClick?.Invoke(this);
     private protected virtual void OnMouseDrag(int x, int y) => MouseDrag?.Invoke(this, x, y);
+    private protected virtual void OnMouseRelativeMove(int x, int y) => MouseRelativeMove?.Invoke(this, x, y);
 
     public class ControlDispatcher(Control owner)
     {
@@ -201,5 +205,7 @@ abstract class Control
         public void InvokeOnMouseLeftUp() => owner.OnMouseLeftUp();
         public void InvokeOnMouseRightClick() => owner.OnMouseRightClick();
         public void InvokeOnMouseDrag(int x, int y) => owner.OnMouseDrag(x, y);
+        public void InvokeOnMouseRelativeMove(int x, int y) => owner.OnMouseRelativeMove(x, y);
+        public void SetIsInDragState(bool state) => owner.IsInDragState = state;
     }
 }

@@ -13,7 +13,7 @@
             },
             MouseRightClick = sender =>
             {
-                if (MainWindow.Instance.IsPinned)
+                if (ConsoleWindowState.IsHasPinnedState)
                     return;
 
                 var label = (sender as HackNameLabel)!;

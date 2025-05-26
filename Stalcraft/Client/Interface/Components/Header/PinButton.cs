@@ -9,17 +9,15 @@ class PinButton : Button
     MainWindow mainWindow;
     OverlayWindow overlayWindow;
 
-    public bool IsPinned => pinned;
-
-    bool pinned;
     private protected override void OnClick()
     {
-        pinned = !pinned;
-        ConsoleWindow.HasHeader = !pinned;
+        var pinned = !ConsoleWindowState.IsPinned;
         ConsoleWindow.IsTopmost = pinned;
 
         if (pinned)
         {
+            ConsoleWindowState.State = ConsoleWindowState.Pinned;
+
             mainWindow.RemoveControl(this);
             overlayWindow.AddControl(this);
 
@@ -32,19 +30,21 @@ class PinButton : Button
         }
         else
         {
+            ConsoleWindowState.State = ConsoleWindowState.Default;
+
             overlayWindow.RemoveControl(this);
             mainWindow.AddControl(this);
 
             overlayWindow.DisappearHacks();
             mainWindow.AppearHacks();
 
-            SetLocation(Window.Width - 3, 0);
+            SetLocation(Window.Width - 4, 0);
             overlayWindow.Close();
             ConsoleWindow.MoveWindow((overlayWindow.Width - mainWindow.Width + 2) * Console.CharWidth, 0);
         }
 
         UpdateStyles();
-        ConsoleWindow.EnsureHideState();
+        ConsoleWindowState.EnsureStateIsApplied();
     }
 
     private protected override void OnMouseEnter() => UpdateStyles();

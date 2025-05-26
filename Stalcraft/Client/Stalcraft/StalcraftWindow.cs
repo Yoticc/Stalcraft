@@ -47,7 +47,7 @@ static class StalcraftWindow
                     foregroundWindowHandle = newForegoundHandle;
 
                     if (isNewForegroundWindow)
-                        ConsoleWindow.EnsureHideState();
+                        ConsoleWindowState.EnsureStateIsApplied();
 
                     Thread.Sleep(WindowCheckDelay);
                 }
@@ -67,8 +67,7 @@ static class StalcraftWindow
             WindowStyles.Visible |
             WindowStyles.ClipSiblings |
             WindowStyles.ClipChildren |
-            WindowStyles.Group |
-            WindowStyles.TabStop
+            WindowStyles.Group
         );
 
         var resolution = User32.GetMonitorResolution();

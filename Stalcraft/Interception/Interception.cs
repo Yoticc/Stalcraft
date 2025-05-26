@@ -28,11 +28,11 @@ static class Interception
         return;
 #endif
 
-        keyboard = InterceptionInterop.CreateContext();
-        InterceptionInterop.SetFilter(keyboard, InterceptionInterop.IsKeyboard, InterceptionInterop.Filter.All);
+        keyboard = CreateContext();
+        SetFilter(keyboard, IsKeyboard, Filter.All);
 
-        mouse = InterceptionInterop.CreateContext();
-        InterceptionInterop.SetFilter(mouse, InterceptionInterop.IsMouse, InterceptionInterop.Filter.All);
+        mouse = CreateContext();
+        SetFilter(mouse, IsMouse, Filter.All);
 
         (driverupdaterkeyboard = new(DriverKeyboardUpdater)
         {
@@ -45,29 +45,29 @@ static class Interception
         }).Start();
     }
 
-    static Keys ToKey(InterceptionInterop.KeyStroke keyStroke)
+    static Keys ToKey(KeyStroke keyStroke)
     {
         var result = keyStroke.Code;
-        if ((keyStroke.State & InterceptionInterop.KeyState.E0) != 0)
+        if ((keyStroke.State & KeyState.E0) != 0)
             result += 0x100;
         return (Keys)result;
     }
 
-    static InterceptionInterop.KeyStroke ToKeyStroke(Keys key, bool down)
+    static KeyStroke ToKeyStroke(Keys key, bool down)
     {
-        var result = new InterceptionInterop.KeyStroke();
+        var result = new KeyStroke();
         if (!down)
-            result.State = InterceptionInterop.KeyState.Up;
+            result.State = KeyState.Up;
         var code = (short)key;
         if (code >= 0x100)
         {
             code -= 0x100;
-            result.State |= InterceptionInterop.KeyState.E0;
+            result.State |= KeyState.E0;
         }
         else if (code < 0)
         {
             code += 100;
-            result.State |= InterceptionInterop.KeyState.E0;
+            result.State |= KeyState.E0;
         }
         result.Code = (ushort)code;
         return result;
@@ -112,14 +112,21 @@ static class Interception
     }
 
     static void DriverMouseUpdaterBootstrapper()
-    {        
+    {
         var stroke = new Stroke();
         while (true)
         {
             try
             {
-                while (Receive(mouse, mouseDeviceID = Wait(mouse), ref stroke, 1) > 0)
+                while (true)
                 {
+                    mouseDeviceID = Wait(mouse);
+
+                    if (mouseDeviceID == 0)
+                        continue;
+
+                    Receive(mouse, mouseDeviceID, ref stroke, 1);
+
                     var processed = false;
                     switch (stroke.Mouse.State)
                     {
@@ -160,14 +167,17 @@ static class Interception
                         case MouseState.Wheel:
                             processed = InternalOnMouseWheel(stroke.Mouse.Rolling);
                             break;
+                        default:
+                            processed = InternalOnMouseMove(stroke.Mouse.X, stroke.Mouse.Y);
+                            break;
                     }
-                    processed = InternalOnMouseMove(stroke.Mouse.X, stroke.Mouse.Y);
+
                     if (!processed)
                         Send(mouse, mouseDeviceID, ref stroke, 1);
                 }
             }
             catch { }
-        }        
+        }
     }
 
     public delegate bool OnMouseMoveDelegate(int x, int y);
@@ -186,7 +196,8 @@ static class Interception
     {
         (LastMouseX, LastMouseY) = (x, y);
         if (OnMouseMove != null)
-            return OnMouseMove(x, y);
+            if (x != 0 || y != 0)
+                return OnMouseMove(x, y);
         return false;
     }
 
