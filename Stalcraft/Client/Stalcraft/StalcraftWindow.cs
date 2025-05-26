@@ -14,9 +14,15 @@ static class StalcraftWindow
 
     public static bool IsActive => foregroundWindowHandle == windowHandle;
 
+    static int opacity = 100;
+    public static int Opacity
+    {
+        set => User32.SetWindowOpacity(WindowHandle, opacity = value);
+    }
+
     static void WatchForWindowHandleThreadBody()
     {
-        const int ProcessCheckDelay = 5000;
+        const int ProcessCheckDelay = 3000;
         const int WindowCheckDelay = 15;
         const int IteractionCount = ProcessCheckDelay / WindowCheckDelay;
 
@@ -36,7 +42,13 @@ static class StalcraftWindow
 
                 for (var i = 0; i < IteractionCount; i++)
                 {
-                    foregroundWindowHandle = User32.GetForegroundWindow();
+                    var newForegoundHandle = User32.GetForegroundWindow();
+                    var isNewForegroundWindow = newForegoundHandle != foregroundWindowHandle;
+                    foregroundWindowHandle = newForegoundHandle;
+
+                    if (isNewForegroundWindow)
+                        ConsoleWindow.EnsureHideState();
+
                     Thread.Sleep(WindowCheckDelay);
                 }
             }
@@ -61,5 +73,7 @@ static class StalcraftWindow
 
         var resolution = User32.GetMonitorResolution();
         User32.SetWindowRectangle(hwnd, 0, 0, resolution.Width, resolution.Height);
+
+        Opacity = opacity;
     }
 }

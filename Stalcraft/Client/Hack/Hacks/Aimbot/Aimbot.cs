@@ -1,19 +1,17 @@
-﻿class AimbotHack : Hack
+﻿static class Aimbot
 {
     public const int TAB_WIDTH_PADDING = 82;
     public const int TAB_HEIGHT_PADDING = 22;
     public const int TAB_POINTER_LENGTH = 5;
 
-    public AimbotHack() : base("aimbot") { }
-
-    public static AimbotTab? DetectTab(SlicedMemoryBitmap bitmap)
+    public static AimbotTab? DetectTab(SlicedMemoryBitmap bitmap, int offset)
     {
         var width = bitmap.ParentWidth;
         var height = bitmap.ParentHeight;
         var centerX = width / 2;
         var centerY = height / 2;
 
-        var tabs = DetectTabs(bitmap);
+        var tabs = DetectTabs(bitmap, offset);
 
         if (tabs.Count == 0)
             return null;
@@ -41,7 +39,7 @@
         }
     }
 
-    static List<AimbotTab> DetectTabs(SlicedMemoryBitmap bitmap)
+    static List<AimbotTab> DetectTabs(SlicedMemoryBitmap bitmap, int offset)
     {
         List<AimbotTab> tabs = [];
 
@@ -57,7 +55,7 @@
                 {
                     if (ValidateTab(x, y))
                     {
-                        var tab = new AimbotTab(bitmap.X + x, bitmap.Y + y + 24); // 18/28
+                        var tab = new AimbotTab(bitmap.X + x, bitmap.Y + y + offset); // 18/28
                         tabs.Add(tab);
                     }
                     y -= TAB_POINTER_LENGTH;
@@ -115,5 +113,3 @@
         bool IsColorRed(Pixel pixel) => pixel.R >= 150 && pixel.G <= 80 && pixel.B <= 80;
     }
 }
-
-record struct AimbotTab(int ScreenX, int ScreenY);

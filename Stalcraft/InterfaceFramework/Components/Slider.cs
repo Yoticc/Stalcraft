@@ -4,13 +4,14 @@ delegate void SliderEventArgs(Slider sender, int value);
 
 class Slider : Control
 {
-    public Slider(Point location = default, int numberOfDevisions = 10, int minValue = 0, int maxValue = 100, int defaultValue = 50) 
+    public Slider(Point location = default, int numberOfDevisions = 10, int minValue = 0, int maxValue = 100, int defaultValue = 50, SliderEventArgs? valueChange = null)
         : base(location, size: new(numberOfDevisions + 3, 1))
     {
         (NumberOfDevisions, MinValue, MaxValue) = (numberOfDevisions, minValue, maxValue);
 
         differenceValue = maxValue - minValue;
         singleDevision = (float)differenceValue / numberOfDevisions;
+        ValueChange = valueChange;
 
         SetValue(defaultValue);
     }

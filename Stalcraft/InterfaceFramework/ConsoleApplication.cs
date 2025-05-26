@@ -39,8 +39,7 @@ unsafe static class ConsoleApplication
         ConsoleWindow.WindowStyles =
             WindowStyles.Visible |
             WindowStyles.Border |
-            WindowStyles.DlgFrame |
-            WindowStyles.TabStop;
+            WindowStyles.DlgFrame;
 
     public static void ClearAndSetSize(int width, int height)
     {
@@ -56,7 +55,6 @@ unsafe static class ConsoleApplication
         Console.SetBufferSize(width + 32, height + 32);
 
         ConsoleWindow.ShowScrollbar = false;
-        ConsoleWindow.RemoveUnusedConsoleSpace();
     }
 
     static void OnMouseMove(int x, int y)

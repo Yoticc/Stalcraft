@@ -2,20 +2,60 @@
 #pragma warning disable CS8618 // Non-nullable field must contain a non-null value when exiting constructor. Consider adding the 'required' modifier or declaring as nullable.
 unsafe class MainWindow : Window
 {
-    public MainWindow() : base("Stalcraft client", 51, 7) { }
+    public static MainWindow Instance;
+
+    public MainWindow() : base("Stalcraft client", 51, 15) => Instance = this;
+
+    public bool IsPinned => pinButton.IsPinned;
 
     OverlayWindow overlayWindow;
     HackListPanel hackListPanel;
     NameplatedPanel nameplatedHacksPanel;
-    Button closeButton;
-    Button pinButton;
+    NameplatedPanel nameplatedSettingsPanel;
+    CloseButton closeButton;
+    PinButton pinButton;
+
+    static readonly DefaultSettingsPanel defaultSettingsPanel = new();
+    Panel? settingsPanel;
+    public void SetSettingsPanel(Hack hack)
+    {
+        var panel = hack.SettingsPanel;
+        if (panel is null)
+            return;
+
+        if (panel == settingsPanel)
+        {
+            nameplatedSettingsPanel.RemoveControl(settingsPanel);
+            nameplatedSettingsPanel.AddControl(defaultSettingsPanel);
+            settingsPanel = null;
+            nameplatedSettingsPanel.SetNameplateText($"settings");
+        }
+        else
+        {
+            if (settingsPanel is not null)
+            {
+                nameplatedSettingsPanel.RemoveControl(settingsPanel);
+                nameplatedSettingsPanel.AddControl(panel);
+                settingsPanel = panel;
+            }
+            else
+            {
+                nameplatedSettingsPanel.RemoveControl(defaultSettingsPanel);
+                nameplatedSettingsPanel.AddControl(panel);
+                settingsPanel = panel;
+            }
+
+            nameplatedSettingsPanel.SetNameplateText($"{hack.Name} settings");
+        }   
+    }
 
     private protected override void OnInit()
     {
         InitHacks();
         InitOverlay();
         InitButtons();
-        InitOptionsPanel();
+        InitOptions();
+        InitSettings();
 
         void InitHacks()    
         {
@@ -25,7 +65,6 @@ unsafe class MainWindow : Window
                 nameplateText: new(text: "hacks", styles: ConsoleForegroundColor.Gray),
                 location: new(1, 1),
                 size: new(24, 4),
-                panelBorderStyle: PanelBorderStyle.ASCII,
                 borderStyles: ConsoleForegroundColor.Gray
             );
 
@@ -46,25 +85,34 @@ unsafe class MainWindow : Window
             AddControls(closeButton, pinButton);
         }
 
-        void InitOptionsPanel()
+        void InitOptions()
         {
             var optionsPanel = new NameplatedPanel(
                 nameplateText: new(text: "options", styles: ConsoleForegroundColor.Gray),
                 location: new(29, 1),
                 size: new(20, 4),
-                panelBorderStyle: PanelBorderStyle.ASCII,
                 borderStyles: ConsoleForegroundColor.Gray
             );
 
-            var copaq = new OptionPanel(optionsPanel, optionName: "copaq", minValue: 40, maxValue: 100, defaultValue: *HackManager.Config->ClientWindowOpacity, location: new(0, 0))
-            {
-                ValueChange = opacity => *HackManager.Config->ClientWindowOpacity = ConsoleWindow.Opacity = opacity
-            };
+            var clientWindowOpacity = Config->Options->ClientWindowOpacity;
+            var stalcraftWindowOpacity = Config->Options->StalcraftWindowOpacity;
+            var copaq = new OptionPanel(
+                optionsPanel,
+                optionName: "copaq",
+                minValue: 40,
+                maxValue: 100,
+                defaultValue: *clientWindowOpacity,
+                opacity => *clientWindowOpacity = ConsoleWindow.Opacity = opacity,
+                location: new(0, 0));
 
-            var gopaq = new OptionPanel(optionsPanel, optionName: "gopaq", minValue: 40, maxValue: 100, defaultValue: *HackManager.Config->StalcraftWindowOpacity, location: new(0, 1))
-            {
-                ValueChange = opacity => *HackManager.Config->StalcraftWindowOpacity = opacity
-            };
+            var gopaq = new OptionPanel(
+                optionsPanel,
+                optionName: "gopaq",
+                minValue: 40,
+                maxValue: 100,
+                defaultValue: *stalcraftWindowOpacity,
+                opacity => *stalcraftWindowOpacity = StalcraftWindow.Opacity = opacity,
+                location: new(0, 1));
 
             var defaults = new Button(text: new(text: "default", styles: ConsoleForegroundColor.Gray), location: new(optionsPanel.Width - 9, 3))
             {
@@ -72,16 +120,34 @@ unsafe class MainWindow : Window
                 MouseLeave = button => button.SetStyle(ConsoleForegroundColor.Gray),
                 MouseLeftClick = button =>
                 {
-                    HackManager.Config->SetOptionsToDefault();
+                    ConfigurationFile.SetConfigToDefault();
 
-                    copaq.SetValue(*HackManager.Config->ClientWindowOpacity);
-                    gopaq.SetValue(*HackManager.Config->StalcraftWindowOpacity);
+                    copaq.SetValue(*clientWindowOpacity);
+                    gopaq.SetValue(*stalcraftWindowOpacity);
+
+                    hackListPanel.Update();
+
+                    foreach (var hack in HackManager.Hacks)
+                        hack.SettingsPanel?.Update();
                 }
             };
 
             optionsPanel.AddControls(copaq, gopaq, defaults);
 
             AddControls(optionsPanel);
+        }
+        
+        void InitSettings()
+        {
+            nameplatedSettingsPanel = new(
+                nameplateText: new(text: "settings", styles: ConsoleForegroundColor.Gray),
+                location: new(1, 8),
+                size: new(48, 5),
+                borderStyles: ConsoleForegroundColor.Gray
+            );
+
+            AddControl(nameplatedSettingsPanel);
+            nameplatedSettingsPanel.AddControl(defaultSettingsPanel);
         }
     }
 

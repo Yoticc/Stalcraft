@@ -1,0 +1,1 @@
+﻿record AimbotTab(int ScreenX, int ScreenY);

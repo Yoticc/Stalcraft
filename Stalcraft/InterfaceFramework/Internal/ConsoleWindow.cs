@@ -10,24 +10,26 @@ static class ConsoleWindow
         EnsureIsWindowMetricsKnown();
     }
 
-    static bool topmost;
-    public static bool Topmost 
+    public static bool IsActive => User32.GetForegroundWindow() == windowHandle;
+
+    static bool isTopmost;
+    public static bool IsTopmost
     {
-        get => topmost;
+        get => isTopmost;
         set
         {
             const nint HWND_TOPMOST = -1;
             const nint HWND_NOTOPMOST = -2;
 
             User32.SetWindowType(windowHandle, value ? HWND_TOPMOST : HWND_NOTOPMOST);
-            topmost = value;
+            isTopmost = value;
         }
     }
 
-    static bool header = true;
-    public static bool Header
+    static bool hasHeader = true;
+    public static bool HasHeader
     {
-        get => header;
+        get => hasHeader;
         set
         {
             const WindowStyles HeaderStyles = WindowStyles.DlgFrame | WindowStyles.Border;
@@ -42,7 +44,22 @@ static class ConsoleWindow
                 RemoveWindowStyles(HeaderStyles);
                 MoveWindow(windowSidePadding, windowHeaderHeight);
             }
-            header = value;
+            hasHeader = value;
+        }
+    }
+
+    static bool isHidden;
+    public static bool IsHidden
+    {
+        get => isHidden;
+        set
+        {
+            isHidden = value;
+            var styles = WindowStyles;
+            if (value)
+                ShowOnlyPinButtonInOverlay();
+            else RemoveUnusedConsoleSpace();
+            WindowStyles = styles;
         }
     }
 
@@ -107,7 +124,22 @@ static class ConsoleWindow
     public static void RemoveUnusedConsoleSpace()
     {
         var windowRectangle = WindowRectangle;
-        var clippedWindowRectangle = new Rectangle(0, 0, windowRectangle.Width - Console.CharWidth, windowRectangle.Height - Console.CharHeight);
+        var width = windowRectangle.Width - Console.CharWidth;
+        var height = windowRectangle.Height - Console.CharHeight;
+
+        if (hasHeader)
+            height += windowHeaderHeight;
+
+        var clippedWindowRectangle = new Rectangle(0, 0, width, height);
+        SetWindowRegion(clippedWindowRectangle);
+        nowIsCustomRegion = true;
+    }
+
+    public static void ShowOnlyPinButtonInOverlay()
+    {
+        var windowRectangle = WindowRectangle;
+
+        var clippedWindowRectangle = new Rectangle((OverlayWindow.Instance.Width - 1) * Console.CharWidth, 0, Console.CharWidth, Console.CharHeight);
         SetWindowRegion(clippedWindowRectangle);
         nowIsCustomRegion = true;
     }
@@ -122,5 +154,18 @@ static class ConsoleWindow
     {
         if (nowIsCustomRegion)
             ResetWindowRegion();
+    }
+
+    public static void EnsureHideState()
+    {
+        if (MainWindow.Instance.IsPinned)
+        {
+            if ((StalcraftWindow.IsActive || IsActive) && isHidden)
+                IsHidden = false;
+            else if (!(StalcraftWindow.IsActive || IsActive) && !isHidden)
+                IsHidden = true;
+        }
+        else if (isHidden)
+            IsHidden = false;
     }
 }

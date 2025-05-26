@@ -2,33 +2,38 @@
 
 abstract unsafe class Hack
 {
+    static int initIndex;
+
     public Hack(string name)
     {
+        InitIndex = initIndex++;
+
         Name = name;
         Dispatcher = new(this);
+
+        var hackState = Config->Hacks->GetHackState(this);
+        keybind = hackState->Keybind;
+        isEnabled = hackState->IsEnabled;
     }
 
     public HackDispatcher Dispatcher;
 
     public Action? HackTurned;
 
+    private protected static Configuration* Config => ConfigurationFile.Config;
+
+    public SettingsPanel? SettingsPanel { get; private protected set; }
+
+    Keys* keybind;
+    public Keys Keybind { get => *keybind; private set => *keybind = value; }
+
+    bool* isEnabled;
+    public bool IsEnabled { get => *isEnabled; private set => *isEnabled = value; }
+
     public string Name { get; private init; }
-    public Keys DefaultKeybind { get; private init; }
-    public Keys* KeybindPointer { get; private set; }
-    public Keys Keybind { get => *KeybindPointer; private set => *KeybindPointer = value; }
     public int InitIndex { get; private set; }
 
-    public bool* IsEnabledPointer { get; private set; }
-    public bool IsEnabled { get => *IsEnabledPointer; private set => *IsEnabledPointer = value; }
-    public bool HasKeybind => Keybind != default;
-
-    public void SetIsEnabledPointer(bool* pointer) => IsEnabledPointer = pointer;
-
-    public void SetKeybindPointer(Keys* key) => KeybindPointer = key;
-
-    public void SetKeybind(Keys key) => *KeybindPointer = key;
-
-    public void SetInitIndex(int index) => InitIndex = index;
+    public void SetKeybind(Keys key) => Keybind = key;
 
     public void Turn()
     {

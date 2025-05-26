@@ -12,6 +12,8 @@ Process.GetProcessesByName(currentProcess.ProcessName).Where(process => process.
 
 Drivers.EnsureIsInstalled();
 
+RuntimeHelpers.RunClassConstructor(typeof(ConfigurationFile).TypeHandle);
+
 ConsoleApplication.Run<MainWindow>();
 
 RuntimeHelpers.RunClassConstructor(typeof(StalcraftWindowCapture).TypeHandle);

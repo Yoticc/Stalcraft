@@ -1,6 +1,12 @@
 ﻿class OverlayWindow : Window
 {
-    public OverlayWindow(HackListPanel hackListPanel) : base("Overlay", 24, 4) => this.hackListPanel = hackListPanel;
+    public static OverlayWindow Instance;
+
+    public OverlayWindow(HackListPanel hackListPanel) : base("Overlay", 24, 4)
+    {
+        Instance = this;
+        this.hackListPanel = hackListPanel;
+    }
 
     HackListPanel hackListPanel;
 
