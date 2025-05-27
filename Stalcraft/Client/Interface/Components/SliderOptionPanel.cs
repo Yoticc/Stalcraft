@@ -1,11 +1,11 @@
 ﻿using System.Drawing;
 
-class OptionPanel : Panel
+class SliderOptionPanel : Panel
 {
-    public OptionPanel(Panel owner, string optionName, int minValue = 0, int maxValue = 100, int defaultValue = 50, Action<int>? valueChange = null, Point location = default)
+    public SliderOptionPanel(Panel owner, string optionName, int minValue = 0, int maxValue = 100, int defaultValue = 50, Action<int>? valueChange = null, Point location = default)
         : this(owner.Width - 2, optionName, minValue, maxValue, defaultValue, valueChange, location) { }
 
-    public OptionPanel(int width, string optionName, int minValue = 0, int maxValue = 100, int defaultValue = 50, Action<int>? valueChange = null, Point location = default)
+    public SliderOptionPanel(int width, string optionName, int minValue = 0, int maxValue = 100, int defaultValue = 50, Action<int>? valueChange = null, Point location = default)
         : base(location, size: new(width, 1))
     {
         ValueChange = valueChange;

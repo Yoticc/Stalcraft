@@ -46,7 +46,7 @@ static class ConsoleWindow
         set => User32.SetWindowStyles(WindowHandle, value);
     }
 
-    public static void SetWindowLocation(int x, int y) => User32.SetWindowLocation(WindowHandle, x, y);
+    public static Point WindowLocation { get => User32.GetWindowLocation(WindowHandle); set => User32.SetWindowLocation(WindowHandle, value.X, value.Y); }
 
     public static void MoveWindow(int x, int y)
     {

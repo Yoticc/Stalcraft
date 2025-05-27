@@ -3,7 +3,7 @@
     static AimbotSettings* settings = Config->Settings->Aimbot;
     public AimbotSettingsPanel()
     {
-        fovOption = new OptionPanel(
+        fovOption = new SliderOptionPanel(
             width: 25,
             optionName: "fov",
             minValue: 150,
@@ -12,7 +12,7 @@
             defaultValue: *settings->Fov,
             location: new(0, 0));
 
-        offsetOption = new OptionPanel(
+        offsetOption = new SliderOptionPanel(
             width: 25,
             optionName: "offset",
             minValue: 12,
@@ -24,8 +24,8 @@
         AddControls(fovOption, offsetOption);
     }
 
-    OptionPanel fovOption;
-    OptionPanel offsetOption;
+    SliderOptionPanel fovOption;
+    SliderOptionPanel offsetOption;
 
     public override void Update()
     {

@@ -65,15 +65,17 @@ abstract unsafe class Hack
     public virtual bool ShouldCaptureFrame() => false;
 
     protected private virtual void OnCaptureFrame(Frame frame, FrameState frameState, MemoryBitmap bitmap) { }
-    protected private virtual void OnUpdate() { }
     protected private virtual void OnInit() { }
     protected private virtual void OnEnable() { }
     protected private virtual void OnDisable() { }
+    protected private virtual void OnKeyDown(Keys key) { }
+    protected private virtual void OnKeyUp(Keys key) { }
 
     public class HackDispatcher(Hack owner)
     {
         public void InvokeOnCaptureFrame(Frame frame, FrameState frameState, MemoryBitmap bitmap) => owner.OnCaptureFrame(frame, frameState, bitmap);
-        public void InvokeOnUpdate() => owner.OnUpdate();
         public void InvokeOnInit() => owner.OnInit();
+        public void InvokeOnKeyDown(Keys key) => owner.OnKeyDown(key);
+        public void InvokeOnKeyUp(Keys key) => owner.OnKeyUp(key);
     }
 }

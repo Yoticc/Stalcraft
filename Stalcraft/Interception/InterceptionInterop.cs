@@ -1,7 +1,7 @@
 ﻿using System.Runtime.InteropServices;
 
 static class InterceptionInterop
-{
+{    
     [Flags]
     public enum Filter : ushort
     {

@@ -4,7 +4,7 @@ unsafe class MainWindow : Window
 {
     public static MainWindow Instance;
 
-    public MainWindow() : base("Stalcraft client", 52, 16) => Instance = this;
+    public MainWindow() : base("Stalcraft client", 52, 17) => Instance = this;
 
     OverlayWindow overlayWindow;
     HackListPanel hackListPanel;
@@ -61,7 +61,7 @@ unsafe class MainWindow : Window
 
             nameplatedHacksPanel = new NameplatedPanel(
                 nameplateText: new(text: "hacks", styles: ConsoleForegroundColor.Gray),
-                location: new(1, 1),
+                location: new(1, 2),
                 size: new(24, 4),
                 borderStyles: ConsoleForegroundColor.Gray
             );
@@ -77,24 +77,25 @@ unsafe class MainWindow : Window
 
         void Initheader()
         {
+            var header = new HeaderLabel(Width - 5);
             closeButton = new CloseButton(location: new(Width - 2, 0));
             pinButton = new PinButton(this, overlayWindow, location: new(Width - 4, 0));
 
-            AddControls(closeButton, pinButton);
+            AddControls(header, closeButton, pinButton);
         }
 
         void InitOptions()
         {
             var optionsPanel = new NameplatedPanel(
                 nameplateText: new(text: "options", styles: ConsoleForegroundColor.Gray),
-                location: new(29, 1),
+                location: new(29, 2),
                 size: new(20, 4),
                 borderStyles: ConsoleForegroundColor.Gray
             );
 
             var clientWindowOpacity = Config->Options->ClientWindowOpacity;
             var stalcraftWindowOpacity = Config->Options->StalcraftWindowOpacity;
-            var copaq = new OptionPanel(
+            var copaq = new SliderOptionPanel(
                 optionsPanel,
                 optionName: "copaq",
                 minValue: 40,
@@ -103,7 +104,7 @@ unsafe class MainWindow : Window
                 opacity => *clientWindowOpacity = ConsoleWindow.Opacity = opacity,
                 location: new(0, 0));
 
-            var gopaq = new OptionPanel(
+            var gopaq = new SliderOptionPanel(
                 optionsPanel,
                 optionName: "gopaq",
                 minValue: 40,
@@ -139,7 +140,7 @@ unsafe class MainWindow : Window
         {
             nameplatedSettingsPanel = new(
                 nameplateText: new(text: "settings", styles: ConsoleForegroundColor.Gray),
-                location: new(1, 8),
+                location: new(1, 9),
                 size: new(48, 5),
                 borderStyles: ConsoleForegroundColor.Gray
             );

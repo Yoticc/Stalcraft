@@ -1,4 +1,6 @@
 ﻿using System.Drawing;
+using System.Net.Http.Headers;
+using System.Text;
 
 abstract class Window
 {
@@ -150,6 +152,42 @@ abstract class Window
         }
 
         return bitmap;
+    }
+
+    public string DumpLayers()
+    {
+        var sb = new StringBuilder();
+
+        for (var i = 0; i < Controls.Count; i++)
+        {
+            var control = Controls[i];
+            DumpLayer(0);
+
+            void DumpLayer(int depth)
+            {
+                sb.Append(new string(' ', depth * 2));
+                sb.Append(control.GetType().Name);
+                sb.Append(' ');
+                sb.Append(control.AbsoluteBounds.Left);
+                sb.Append(' ');
+                sb.Append(control.AbsoluteBounds.Top);
+                sb.Append(' ');
+                sb.Append(control.AbsoluteBounds.Right);
+                sb.Append(' ');
+                sb.Append(control.AbsoluteBounds.Bottom);
+                sb.Append('\n');
+
+                depth++;
+                var controls = control.Controls;
+                for (var i = 0; i < controls.Count; i++)
+                {
+                    control = controls[i];
+                    DumpLayer(depth);
+                }
+            }
+        }
+
+        return sb.ToString();
     }
 
     private protected virtual void OnMouseRelativeMove(int x, int y)

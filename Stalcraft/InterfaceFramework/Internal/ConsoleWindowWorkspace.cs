@@ -30,7 +30,7 @@ class ConsoleWindowWorkspace
         }
     }
 
-    public static Point OneCharCoordintions;
+    public static Point OneCharCoordinations;
 
     public static void EnsureStateIsApplied() => State = state;
 
@@ -57,7 +57,7 @@ class ConsoleWindowWorkspace
     {
         var hwnd = ConsoleWindow.WindowHandle;
         var location = User32.GetDiffenceBetweenWindowAndScreen(hwnd);
-        var charCoords = OneCharCoordintions;
+        var charCoords = OneCharCoordinations;
         var (relativeX, relativeY) = (Console.CharWidth * charCoords.X, Console.CharHeight * charCoords.Y);
         location = new Point(location.X + relativeX, location.Y + relativeY);
         var size = new Size(Console.CharWidth, Console.CharWidth);

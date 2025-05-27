@@ -100,6 +100,9 @@ unsafe record struct SettingsConfiguration()
 
     AntiRecoilSettings antiRecoil = new();
     public AntiRecoilSettings* AntiRecoil => &self(ref this)->antiRecoil;
+
+    AutoXSettings autoX = new();
+    public AutoXSettings* AutoX => &self(ref this)->autoX;
 }
 
 unsafe record struct AimbotSettings()
@@ -117,20 +120,26 @@ unsafe record struct AntiRecoilSettings()
 
     public Profile* Profiles => &self(ref this)->profile1;
 
-    public record struct Profile
+    public record struct Profile()
     {
         bool isExists;
         public bool* IsExists => &self(ref this)->isExists;
 
-        int shift;
+        int shift = 6;
         public int* Shift => &self(ref this)->shift;
 
-        int delay;
+        int delay = 6;
         public int* Delay => &self(ref this)->delay;
 
         Keys keybind;
         public Keys* Keybind => &self(ref this)->keybind;
     }
+}
+
+unsafe record struct AutoXSettings()
+{
+    Keys keybind = Keys.Button2;
+    public Keys* Keybind => &self(ref this)->keybind;
 }
 
 unsafe static class Extensions

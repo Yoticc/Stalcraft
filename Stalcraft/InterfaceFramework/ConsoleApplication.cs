@@ -1,4 +1,6 @@
-﻿using System.Drawing;
+﻿using System.Diagnostics;
+using System.Drawing;
+using static System.Windows.Forms.VisualStyles.VisualStyleElement.Window;
 
 #pragma warning disable CS0618 // Type or member is obsolete
 unsafe static class ConsoleApplication
@@ -12,11 +14,23 @@ unsafe static class ConsoleApplication
         RegisterInterceptionEvents();
     }
         
-    public static Rectangle Bounds => new Rectangle(new Point(0, 0), new Size(Console.Width, Console.Height));
+    public static Rectangle Bounds => new(new(0, 0), new(Console.Width, Console.Height));
 
     static Window? currentWindow;
     public static nint ActiveWindowHandle;
     static bool isClientWindowActive;
+
+    static bool isWindowCaught;
+    static Point caughtWindowPosition;
+    static Point caughtCursorPosition;
+    public static void CatchWindow()
+    {
+        isWindowCaught = true;
+        caughtWindowPosition = ConsoleWindow.WindowLocation;
+        caughtCursorPosition = User32.GetCursorPosition();
+    }
+
+    public static void UncatchWindow() => isWindowCaught = false;
 
     static void AllocateConsole() => Console.AllocateConsole();
 
@@ -32,7 +46,6 @@ unsafe static class ConsoleApplication
     static void SetupWindow()
     {
         ConsoleWindow.WindowStyles = WindowStyles.Visible;
-
         ConsoleWindowState.State = ConsoleWindowState.Default;
     }
 
@@ -43,12 +56,31 @@ unsafe static class ConsoleApplication
         ConsoleWindowWorkspace.EnsureStateIsApplied();
     }
 
-    static void OnMouseRelativeMove(int x, int y)
+    static bool OnMouseRelativeMove(int x, int y)
     {
-        if (currentWindow is null)
-            return;
+        if (currentWindow is not null)
+        {
+            currentWindow.Dispatcher.InvokeOnMouseRelativeMove(x, y);
 
-        currentWindow.Dispatcher.InvokeOnMouseRelativeMove(x, y);
+            if (isWindowCaught)
+            {
+                var windowPosition = caughtWindowPosition;
+                windowPosition.X += x;
+                windowPosition.Y += y;
+                caughtWindowPosition = windowPosition;
+
+                var cursorPosition = caughtCursorPosition;
+                cursorPosition.X += x;
+                cursorPosition.Y += y;
+                caughtCursorPosition = cursorPosition;
+
+                ConsoleWindow.WindowLocation = windowPosition;
+                User32.SetCursorPosition(cursorPosition.X, cursorPosition.Y);
+                return true;
+            }
+        }
+
+        return false;
     }
 
     static void OnMouseMove(int x, int y)
@@ -128,17 +160,16 @@ unsafe static class ConsoleApplication
             return false;
         };
 
-        Interception.OnMouseMove += (x, y) =>
-        {
-            OnMouseRelativeMove(x, y);
-            return false;
-        };
+        Interception.OnMouseMove += OnMouseRelativeMove;
     }
 
     static void OnKeyUp(Keys key)
     {
         if (key == Keys.MouseLeft)
         {
+            if (isWindowCaught)
+                isWindowCaught = false;
+
             OnMouseLeftUp();
             OnMouseClick();
             OnMouseLeftClick();

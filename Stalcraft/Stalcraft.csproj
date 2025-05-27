@@ -21,11 +21,4 @@
     <ProjectReference Include="..\..\ScreenCapture\ScreenCapture\ScreenCapture.csproj" />
   </ItemGroup>
 
-  <ItemGroup>
-    <None Update="interception.dll">
-      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
-      <CustomToolNamespace></CustomToolNamespace>
-    </None>
-  </ItemGroup>
-
 </Project>

@@ -28,9 +28,24 @@ static unsafe class HackManager
         }
 
         Interception.OnKeyUp += OnKeyUp;
+        Interception.OnKeyDown += OnKeyDown;
     }
 
     public static HackTurnedDelegate? HackTurned;
+
+    static bool OnKeyDown(Keys key, bool repeated)
+    {
+        if (!StalcraftWindow.IsActive)
+            return false;
+
+        if (repeated)
+            return false;
+
+        foreach (var hack in Hacks)
+            hack.Dispatcher.InvokeOnKeyDown(key);
+
+        return false;
+    }
 
     static bool OnKeyUp(Keys key)
     {
@@ -38,11 +53,14 @@ static unsafe class HackManager
             return false;
 
         foreach (var hack in Hacks)
+        {
             if (hack.Keybind == key)
                 hack.Turn();
+            hack.Dispatcher.InvokeOnKeyUp(key);
+        }
 
         return false;
-    }
+    }    
 
     public static bool ShouldCaptureFrame()
     {
@@ -55,12 +73,7 @@ static unsafe class HackManager
     public static void PushFrame(Frame frame, FrameState frameState, MemoryBitmap memoryBitmap)
     {
         foreach (var hack in Hacks)
-            hack.Dispatcher.InvokeOnCaptureFrame(frame, frameState, memoryBitmap);
-    }
-
-    public static void PushUpdate()
-    {
-        foreach (var hack in Hacks)
-            hack.Dispatcher.InvokeOnUpdate();
+            if (hack.IsEnabled && hack.ShouldCaptureFrame())
+                hack.Dispatcher.InvokeOnCaptureFrame(frame, frameState, memoryBitmap);
     }
 }

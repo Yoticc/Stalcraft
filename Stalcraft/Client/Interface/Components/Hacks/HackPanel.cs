@@ -24,15 +24,7 @@
             MouseLeave = sender => UpdateLabelState(),
         };
 
-        keybindLabel = new HackKeybindLabel(hack)
-        {
-            MouseRightClick = sender =>
-            {
-                var label = (sender as HackKeybindLabel)!;
-                var hack = label.Hack;
-                OnKeybindMouseClick(label, hack);
-            }
-        };
+        keybindLabel = new KeybindSelector(key: hack.Keybind, valueChange: hack.SetKeybind, location: new(hack.Name.Length + 1, 0));
 
         AddControls(nameLabel, keybindLabel);
         UpdateHackState();
@@ -40,7 +32,7 @@
 
     Hack hack;
     HackNameLabel nameLabel;
-    HackKeybindLabel keybindLabel;
+    KeybindSelector keybindLabel;
 
     public void UpdateHackState()
     {
@@ -60,39 +52,5 @@
         nameLabel.SetStyle(style);
     }
 
-    public void UpdateKeybindState()
-    {
-        var text = new ConsoleMultistyleText();
-        text.Add(text: "[", styles: ConsoleForegroundColor.DarkGray);
-
-        var keybind = hack.Keybind;
-        if (keybind != default)
-        {
-            var formattedKeybind = KeysFormatter.Formate(keybind);
-            text.Add(text: formattedKeybind);
-        }
-
-        text.Add(text: "]", styles: ConsoleForegroundColor.DarkGray);
-        keybindLabel.SetText(text);
-    }
-
-    void OnKeybindMouseClick(HackKeybindLabel label, Hack hack)
-    {
-        var text = new ConsoleMultistyleText();
-        text.Add(text: "[", styles: ConsoleForegroundColor.DarkGray);
-        text.Add(text: "...", styles: ConsoleForegroundColor.Gray | ConsoleTextStyles.Awaiting);
-        text.Add(text: "]", styles: ConsoleForegroundColor.DarkGray);
-        label.SetText(text);
-
-        Interception.OnKeyUp += OnKeyUp;
-
-        bool OnKeyUp(Keys key)
-        {
-            Interception.OnKeyUp -= OnKeyUp;
-            hack.SetKeybind(key);
-            UpdateKeybindState();
-
-            return false;
-        }
-    }
+    public void UpdateKeybindState() => keybindLabel.SetValue(hack.Keybind);
 }

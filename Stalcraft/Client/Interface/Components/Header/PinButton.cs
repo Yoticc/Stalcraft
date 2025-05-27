@@ -26,7 +26,7 @@ class PinButton : Button
 
             SetLocation(Window.Width - 1, 0);
             mainWindow.OpenAsChild(overlayWindow);
-            ConsoleWindow.MoveWindow((mainWindow.Width - overlayWindow.Width - 2) * Console.CharWidth, 0);
+            ConsoleWindow.MoveWindow((mainWindow.Width - overlayWindow.Width - 3) * Console.CharWidth, 0);
         }
         else
         {

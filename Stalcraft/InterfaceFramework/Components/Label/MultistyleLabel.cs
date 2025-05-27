@@ -1,5 +1,4 @@
 ﻿using System.Drawing;
-
 delegate void MultistyleLabelEventArgs(MultistyleLabel sender);
 
 class MultistyleLabel : Control

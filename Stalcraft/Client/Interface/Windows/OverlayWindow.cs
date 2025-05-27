@@ -6,6 +6,8 @@
     {
         Instance = this;
         this.hackListPanel = hackListPanel;
+
+        ConsoleWindowWorkspace.OneCharCoordinations = new(Width - 1, 0);
     }
 
     HackListPanel hackListPanel;

@@ -42,7 +42,7 @@ unsafe class AimbotHack : Hack
             var diffY = detection.ScreenY - (height / 2);
 
             Interception.MouseMove(diffX, diffY);
-            skipNextFrame = true;
+            //skipNextFrame = true;
         }
     }
 

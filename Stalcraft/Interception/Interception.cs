@@ -1,20 +1,19 @@
 ﻿global using InterceptionContext = nint;
 global using InterceptionDevice = int;
-global using KeyList = System.Collections.Generic.List<Keys>;
 using Microsoft.VisualBasic.Devices;
+using System.Windows.Forms;
 using static InterceptionInterop;
 
 #pragma warning disable CS8618 // Non-nullable field must contain a non-null value when exiting constructor. Consider adding the 'required' modifier or declaring as nullable.
 #pragma warning disable CS0649 // Field is never assigned to, and will always have its default value
-static class Interception
+static unsafe class Interception
 {
     static bool isLeftMouseDown, isRightMouseDown;
     static int keyboardDeviceID, mouseDeviceID;
     static nint keyboard, mouse;
-    static public KeyList DownedKeys = new KeyList(256);
+    static bool[] downedKeysArray = new bool[1024];
+    static bool* downedKeysPointer;
     static public int LastMouseX, LastMouseY;
-
-    static Thread driverupdaterkeyboard, driverupdatermouse;
 
     public static int MouseX => LastMouseX;
     public static int MouseY => LastMouseY;
@@ -24,6 +23,9 @@ static class Interception
 
     static Interception()
     {
+        fixed (bool* pointer = downedKeysArray)
+            downedKeysPointer = pointer + 512;
+
 #if DEBUG
         return;
 #endif
@@ -34,16 +36,20 @@ static class Interception
         mouse = CreateContext();
         SetFilter(mouse, IsMouse, Filter.All);
 
-        (driverupdaterkeyboard = new(DriverKeyboardUpdater)
+        new Thread(DriverKeyboardUpdater)
         {
             Priority = ThreadPriority.Highest
-        }).Start();
+        }.Start();
 
-        (driverupdatermouse = new(DriverMouseUpdaterBootstrapper)
+        new Thread(DriverMouseUpdaterBootstrapper)
         {
             Priority = ThreadPriority.Highest
-        }).Start();
+        }.Start();
     }
+
+    static void SetKeyIsDown(Keys key) => downedKeysPointer[(int)key] = true;
+
+    static void SetKeyIsUp(Keys key) => downedKeysPointer[(int)key] = false;
 
     static Keys ToKey(KeyStroke keyStroke)
     {
@@ -86,10 +92,10 @@ static class Interception
                     var processed = false;
                     if (stroke.Key.State.IsKeyDown())
                     {
-                        switch (!DownedKeys.Contains(key))
+                        switch (IsKeyUp(key))
                         {
                             case true:
-                                DownedKeys.Add(key);
+                                SetKeyIsDown(key);
                                 processed = InternalOnKeyDown(key, false);
                                 break;
                             case false:
@@ -99,7 +105,7 @@ static class Interception
                     }
                     else
                     {
-                        DownedKeys.Remove(key);
+                        SetKeyIsUp(key);
                         processed = InternalOnKeyUp(key);
                     }
 
@@ -120,48 +126,53 @@ static class Interception
             {
                 while (true)
                 {
-                    mouseDeviceID = Wait(mouse);
-
-                    if (mouseDeviceID == 0)
-                        continue;
-
-                    Receive(mouse, mouseDeviceID, ref stroke, 1);
+                    Receive(mouse, mouseDeviceID = Wait(mouse), ref stroke, 1);
 
                     var processed = false;
                     switch (stroke.Mouse.State)
                     {
                         case MouseState.LeftButtonDown:
                             isLeftMouseDown = true;
+                            SetKeyIsDown(Keys.MouseLeft);
                             processed = InternalOnKeyDown(Keys.MouseLeft, false);
                             break;
                         case MouseState.RightButtonDown:
                             isRightMouseDown = true;
+                            SetKeyIsDown(Keys.MouseRight);
                             processed = InternalOnKeyDown(Keys.MouseRight, false);
                             break;
                         case MouseState.MiddleButtonDown:
+                            SetKeyIsDown(Keys.MouseMiddle);
                             processed = InternalOnKeyDown(Keys.MouseMiddle, false);
                             break;
                         case MouseState.Button4Down:
+                            SetKeyIsDown(Keys.Button1);
                             processed = InternalOnKeyDown(Keys.Button1, false);
                             break;
                         case MouseState.Button5Down:
+                            SetKeyIsDown(Keys.Button2);
                             processed = InternalOnKeyDown(Keys.Button2, false);
                             break;
                         case MouseState.LeftButtonUp:
                             isLeftMouseDown = false;
+                            SetKeyIsUp(Keys.MouseLeft);
                             processed = InternalOnKeyUp(Keys.MouseLeft);
                             break;
                         case MouseState.RightButtonUp:
                             isRightMouseDown = false;
+                            SetKeyIsUp(Keys.MouseRight);
                             processed = InternalOnKeyUp(Keys.MouseRight);
                             break;
                         case MouseState.MiddleButtonUp:
+                            SetKeyIsUp(Keys.MouseMiddle);
                             processed = InternalOnKeyUp(Keys.MouseMiddle);
                             break;
                         case MouseState.Button4Up:
+                            SetKeyIsUp(Keys.Button1);
                             processed = InternalOnKeyUp(Keys.Button1);
                             break;
                         case MouseState.Button5Up:
+                            SetKeyIsUp(Keys.Button2);
                             processed = InternalOnKeyUp(Keys.Button2);
                             break;
                         case MouseState.Wheel:
@@ -223,25 +234,15 @@ static class Interception
     }
 
     #region Macros
-    public static void KeyClick(Keys key, int delay)
-    {
-        KeyDown(key);
-        Thread.Sleep(delay);
-        KeyUp(key);
-    }
+    public static bool IsKeyDown(Keys key) => downedKeysPointer[(int)key];
 
-    public static bool IsKeyDown(int deviceID, Keys key) => DownedKeys.Contains(key);
+    public static bool IsKeyUp(Keys key) => !IsKeyDown(key);
 
-    public static bool IsKeyDown(Keys key) => IsKeyDown(keyboardDeviceID, key);
-
-    public static bool IsKeyUp(int deviceID, Keys key) => !IsKeyDown(deviceID, key);
-
-    public static bool IsKeyUp(Keys key) => IsKeyUp(keyboardDeviceID, key);
-
-    public static void KeyDown(int deviceID, params Keys[] keys)
+    public static void KeyUp(params Keys[] keys)
     {
         foreach (var key in keys)
         {
+            SetKeyIsUp(key);
             if (((short)key) < 0)
             {
                 var stroke = new Stroke();
@@ -268,18 +269,18 @@ static class Interception
             else
             {
                 var stroke = new Stroke();
-                stroke.Key = ToKeyStroke(key, true);
-                Send(keyboard, deviceID, ref stroke, 1);
+                stroke.Key = ToKeyStroke(key, false);
+                Send(keyboard, keyboardDeviceID, ref stroke, 1);
             }
         }
     }
 
-    public static void KeyDown(params Keys[] keys) => KeyDown(keyboardDeviceID, keys);
-
-    public static void KeyUp(int deviceID, params Keys[] keys)
+    public static void KeyDown(params Keys[] keys)
     {
         foreach (var key in keys)
         {
+            SetKeyIsDown(key);
+
             if (((short)key) < 0)
             {
                 var stroke = new Stroke();
@@ -306,13 +307,11 @@ static class Interception
             else
             {
                 var stroke = new Stroke();
-                stroke.Key = ToKeyStroke(key, false);
-                Send(keyboard, deviceID, ref stroke, 1);
+                stroke.Key = ToKeyStroke(key, true);
+                Send(keyboard, keyboardDeviceID, ref stroke, 1);
             }
         }
     }
-
-    public static void KeyUp(params Keys[] keys) => KeyUp(keyboardDeviceID, keys);
 
     public static void MouseScroll(int deviceID, short rolling)
     {
