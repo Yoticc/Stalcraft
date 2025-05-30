@@ -1,4 +1,5 @@
-﻿using ScreenCapture;
+﻿using Interception;
+using ScreenCapture;
 
 unsafe class AutoXHack : Hack
 {
@@ -8,8 +9,8 @@ unsafe class AutoXHack : Hack
         SettingsPanel = new AutoXSettingsPanel();
     }
 
-    Keys* xKeybind = settings->Keybind;
-    public Keys XKeybind { get => *xKeybind; set => *xKeybind = value; }
+    Key* xKeybind = settings->Keybind;
+    public Key XKeybind { get => *xKeybind; set => *xKeybind = value; }
 
     public override bool ShouldCaptureFrame() => true;
 
@@ -24,19 +25,19 @@ unsafe class AutoXHack : Hack
             state = AutoXState.RestoreKeys;
 
             var rememberedKeys = RememberMovementKeys();
-            Interception.KeyDown(Keys.X);
+            InterceptionImpl.KeyDown(Key.X);
             Thread.Sleep(50);
-            Interception.KeyUp(Keys.X);
+            InterceptionImpl.KeyUp(Key.X);
             RestoreMovementKeys(rememberedKeys);
         }
     }
 
-    static readonly Keys[] movementKeys = [Keys.W, Keys.A, Keys.S, Keys.D, Keys.LControl, Keys.LShift];
+    static readonly Key[] movementKeys = [Key.W, Key.A, Key.S, Key.D, Key.LControl, Key.LShift];
     int RememberMovementKeys()
     {
         var state = 0;
         for (var i = 0; i < movementKeys.Length; i++)
-            if (Interception.IsKeyDown(movementKeys[i]))
+            if (InterceptionImpl.IsKeyDown(movementKeys[i]))
                 state |= 1 << i;
         return state;
     }
@@ -46,13 +47,13 @@ unsafe class AutoXHack : Hack
         for (var i = 0; i < movementKeys.Length; i++)
             if ((state & (1 << i)) != 0)
             {
-                Interception.KeyUp(movementKeys[i]);
-                Interception.KeyDown(movementKeys[i]);
+                InterceptionImpl.KeyUp(movementKeys[i]);
+                InterceptionImpl.KeyDown(movementKeys[i]);
             }
     }
 
     long lastRequestTime = 0;
-    private protected override void OnKeyDown(Keys key)
+    private protected override void OnKeyDown(Key key)
     {
         if (key == XKeybind)
         {
@@ -65,8 +66,8 @@ unsafe class AutoXHack : Hack
                 state = AutoXState.RequestedPressing;
                 lastRequestTime = Kernel32.GetTickCount();
 
-                Interception.KeyDown(Keys.F);
-                Interception.KeyUp(Keys.F);
+                InterceptionImpl.KeyDown(Key.F);
+                InterceptionImpl.KeyUp(Key.F);
             }
         }
     }

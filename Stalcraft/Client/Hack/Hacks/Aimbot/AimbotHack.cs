@@ -1,4 +1,5 @@
-﻿using ScreenCapture;
+﻿using Interception;
+using ScreenCapture;
 
 unsafe class AimbotHack : Hack
 {
@@ -20,29 +21,24 @@ unsafe class AimbotHack : Hack
         var frameBitmap = frame.Bitmap;
         var width = frameBitmap.Width;
         var height = frameBitmap.Height;
+        var centerX = width / 2;
+        var centerY = height / 2;
 
         if (frameState != FrameState.HasOverlay)
             return;
 
-        if (!Interception.IsRightMouseDown)
+        if (!InterceptionImpl.IsRightMouseDown)
             return;
 
-        var fov = 250;
-        var centerBitmap = bitmap.Slice(
-            width / 2 - fov - Aimbot.TAB_WIDTH_PADDING,
-            height / 2 - fov - Aimbot.TAB_HEIGHT_PADDING,
-            (fov + Aimbot.TAB_WIDTH_PADDING) * 2,
-            (fov + Aimbot.TAB_HEIGHT_PADDING) * 2
-        );
-        var detection = Aimbot.DetectTab(centerBitmap, Offset);
+        var detection = Aimbot.DetectTab(bitmap, Fov, Offset);
 
-        if (detection is not null)
+        if (detection.IsValid)
         {
-            var diffX = detection.ScreenX - (width / 2);
-            var diffY = detection.ScreenY - (height / 2);
+            var diffX = detection.X - centerX;
+            var diffY = detection.Y - centerY;
 
-            Interception.MouseMove(diffX, diffY);
-            //skipNextFrame = true;
+            InterceptionImpl.MoveMouse((int)(diffX * 1.5f), (int)(diffY * 1.5));
+            skipNextFrame = true;
         }
     }
 
@@ -54,6 +50,6 @@ unsafe class AimbotHack : Hack
             return false;
         }
 
-        return Interception.IsRightMouseDown;
+        return InterceptionImpl.IsRightMouseDown;
     }
 }

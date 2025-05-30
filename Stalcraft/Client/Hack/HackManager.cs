@@ -1,4 +1,5 @@
-﻿using ScreenCapture;
+﻿using Interception;
+using ScreenCapture;
     
 delegate void HackTurnedDelegate(Hack hack);
 static unsafe class HackManager
@@ -27,13 +28,13 @@ static unsafe class HackManager
             hack.HackTurned += () => HackTurned?.Invoke(hack);
         }
 
-        Interception.OnKeyUp += OnKeyUp;
-        Interception.OnKeyDown += OnKeyDown;
+        InterceptionImpl.OnKeyUp += OnKeyUp;
+        InterceptionImpl.OnKeyDown += OnKeyDown;
     }
 
     public static HackTurnedDelegate? HackTurned;
 
-    static bool OnKeyDown(Keys key, bool repeated)
+    static bool OnKeyDown(Key key, bool repeated)
     {
         if (!StalcraftWindow.IsActive)
             return false;
@@ -47,7 +48,7 @@ static unsafe class HackManager
         return false;
     }
 
-    static bool OnKeyUp(Keys key)
+    static bool OnKeyUp(Key key)
     {
         if (!StalcraftWindow.IsActive)
             return false;

@@ -1,112 +1,92 @@
-﻿static class Aimbot
+﻿unsafe static class Aimbot
 {
     public const int TAB_WIDTH_PADDING = 82;
     public const int TAB_HEIGHT_PADDING = 22;
-    public const int TAB_POINTER_LENGTH = 5;
 
-    public static AimbotTab? DetectTab(SlicedMemoryBitmap bitmap, int offset)
+    public static AimbotTab DetectTab(MemoryBitmap bitmap, int fov, int offset)
     {
-        var width = bitmap.ParentWidth;
-        var height = bitmap.ParentHeight;
-        var centerX = width / 2;
-        var centerY = height / 2;
+        var (width, height) = (fov + TAB_WIDTH_PADDING, fov + TAB_HEIGHT_PADDING);
+        (width, height) = (Math.Min(width, bitmap.Width - TAB_WIDTH_PADDING), Math.Min(height, bitmap.Height - TAB_HEIGHT_PADDING));
+        var radius = width > height ? height : width;
 
-        var tabs = DetectTabs(bitmap, offset);
+        var (x, y) = (bitmap.Width / 2 - radius, bitmap.Height / 2 - radius);
+        var centerBitmap = bitmap.Slice(x, y, radius * 2, radius * 2);
 
-        if (tabs.Count == 0)
-            return null;
-
-        var bestTabIndex = 0;
-        var bestDistance = 10000d;
-        for (var i = 1; i < tabs.Count; i++)
+        AimbotTab tab;
+        if (DetectTab(centerBitmap, radius, radius, radius, &tab))
         {
-            var distance = GetDistanceToTab(tabs[i]);
-            if (bestDistance > distance)
-            {
-                bestTabIndex = i;
-                bestDistance = distance;
-            }
+            tab.X += x;
+            tab.Y += y;
+            tab.Y += offset;
         }
-
-        return tabs[bestTabIndex];
-
-        double GetDistanceToTab(AimbotTab tab)
-        {
-            var x = bitmap.X + tab.ScreenX;
-            var y = bitmap.Y + tab.ScreenY;
-
-            return Math.Sqrt(Math.Pow(Math.Abs(centerX - x), 2) + Math.Pow(Math.Abs(centerY - y), 2));
-        }
+        return tab;
     }
 
-    static List<AimbotTab> DetectTabs(SlicedMemoryBitmap bitmap, int offset)
+    static bool DetectTab(SlicedMemoryBitmap bitmap, int radius, int x, int y, AimbotTab* tab)
     {
-        List<AimbotTab> tabs = [];
-
-        var ys = bitmap.Height - TAB_HEIGHT_PADDING - 1;
-        var ye = TAB_HEIGHT_PADDING;
-        var xs = TAB_WIDTH_PADDING;
-        var xe = bitmap.Width - TAB_WIDTH_PADDING;
-
-        for (var y = ys; y >= ye; y--)
-            for (var x = xs; x < xe; x++)
-            {
-                if (IsPixelRed(x, y))
-                {
-                    if (ValidateTab(x, y))
-                    {
-                        var tab = new AimbotTab(bitmap.X + x, bitmap.Y + y + offset); // 18/28
-                        tabs.Add(tab);
-                    }
-                    y -= TAB_POINTER_LENGTH;
-                }
-            }
-
-        return tabs;
-
-        bool ValidateTab(int tx, int ty)
+        var radius2 = radius * 2;
+        for (var i = 0; i < radius2;)
         {
-            FixNoFirstPixel();
-            return CheckPerfect() || CheckDoubleStart();
+            for (var i2 = 0; i2 < i; i2++)
+                if (CheckPixel(x++, y))
+                    return true;
 
-            void FixNoFirstPixel()
+            for (var i2 = 0; i2 < i; i2++)
+                if (CheckPixel(x, y--))
+                    return true;
+            i++;
+
+            for (var i2 = 0; i2 < i; i2++)
+                if (CheckPixel(x--, y))
+                    return true;
+
+            for (var i2 = 0; i2 < i; i2++)
+                if (CheckPixel(x, y++))
+                    return true;
+            i++;
+        }
+
+        return false;
+
+        bool CheckPixel(int x, int y)
+        {
+            if (IsPixelRed(x, y))
             {
-                if (IsPixelRed(tx + 1, ty) && IsPixelRed(tx + 2, ty))
-                {
-                    var a = bitmap[tx, ty];
+                if (
+                    IsPixelRed(x + 1, y - 1) &&
+                    IsPixelRed(x + 2, y - 2) &&
+                    IsPixelRed(x + 3, y - 3) &&
+                    IsPixelRed(x + 4, y - 4) &&
+                    IsPixelRed(x - 1, y - 1) &&
+                    IsPixelRed(x - 2, y - 2) &&
+                    IsPixelRed(x - 3, y - 3) &&
+                    IsPixelRed(x - 4, y - 4) &&
 
-                    ty += 1;
-                    tx += 1;
+                    !IsPixelRed(x + 1, y - 2 - 1) &&    
+                    !IsPixelRed(x + 2, y - 2 - 2) &&
+                    !IsPixelRed(x + 3, y - 2 - 3) &&
+                    !IsPixelRed(x + 4, y - 2 - 4) &&
+                    !IsPixelRed(x - 1, y - 2 - 1) &&
+                    !IsPixelRed(x - 2, y - 2 - 2) &&
+                    !IsPixelRed(x - 3, y - 2 - 3) &&
+                    !IsPixelRed(x - 4, y - 2 - 4) &&
+
+                    !IsPixelRed(x + 1, y + 3 - 1) &&
+                    !IsPixelRed(x + 2, y + 3 - 2) &&
+                    !IsPixelRed(x + 3, y + 3 - 3) &&
+                    !IsPixelRed(x + 4, y + 3 - 4) &&
+                    !IsPixelRed(x - 1, y + 3 - 1) &&
+                    !IsPixelRed(x - 2, y + 3 - 2) &&
+                    !IsPixelRed(x - 3, y + 3 - 3) &&
+                    !IsPixelRed(x - 4, y + 3 - 4)                    
+                )
+                {
+                    *tab = new AimbotTab() { X = x, Y = y };
+                    return true;
                 }
             }
 
-            bool CheckPerfect()
-            {
-                for (var t = 1; t < TAB_POINTER_LENGTH; t++)
-                    if (!IsPixelRed(tx + t, ty - t) ||
-                        !IsPixelRed(tx - t, ty - t) ||
-                         IsPixelRed(tx - t - 1, ty - t) ||
-                         IsPixelRed(tx + t + 1, ty - t) ||
-                        !IsPixelRed(tx - t, ty - t - 1) ||
-                        !IsPixelRed(tx + t, ty - t - 1))
-                        return false;
-
-                return true;
-            }
-
-            bool CheckDoubleStart()
-            {
-                for (var t = 0; t < TAB_POINTER_LENGTH; t++)
-                    if (!IsPixelRed(tx + t + 1, ty - t) ||
-                        !IsPixelRed(tx - t, ty - t) ||
-                         IsPixelRed(tx - t - 1, ty - t) ||
-                         IsPixelRed(tx + t + 2, ty - t) ||
-                        !IsPixelRed(tx - t, ty - t - 1) ||
-                        !IsPixelRed(tx + t + 1, ty - t - 1))
-                        return false;
-
-                return true;
-            }
+            return false;
         }
 
         bool IsPixelRed(int x, int y) => IsColorRed(bitmap[x, y]);

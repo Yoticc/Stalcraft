@@ -1,4 +1,5 @@
-﻿using ScreenCapture;
+﻿using Interception;
+using ScreenCapture;
 
 abstract unsafe class Hack
 {
@@ -24,8 +25,8 @@ abstract unsafe class Hack
 
     public SettingsPanel? SettingsPanel { get; private protected set; }
 
-    Keys* keybind;
-    public Keys Keybind { get => *keybind; private set => *keybind = value; }
+    Key* keybind;
+    public Key Keybind { get => *keybind; private set => *keybind = value; }
 
     bool* isEnabled;
     public bool IsEnabled { get => *isEnabled; private set => *isEnabled = value; }
@@ -33,7 +34,7 @@ abstract unsafe class Hack
     public string Name { get; private init; }
     public int InitIndex { get; private set; }
 
-    public void SetKeybind(Keys key) => Keybind = key;
+    public void SetKeybind(Key key) => Keybind = key;
 
     public void Turn()
     {
@@ -68,14 +69,14 @@ abstract unsafe class Hack
     protected private virtual void OnInit() { }
     protected private virtual void OnEnable() { }
     protected private virtual void OnDisable() { }
-    protected private virtual void OnKeyDown(Keys key) { }
-    protected private virtual void OnKeyUp(Keys key) { }
+    protected private virtual void OnKeyDown(Key key) { }
+    protected private virtual void OnKeyUp(Key key) { }
 
     public class HackDispatcher(Hack owner)
     {
         public void InvokeOnCaptureFrame(Frame frame, FrameState frameState, MemoryBitmap bitmap) => owner.OnCaptureFrame(frame, frameState, bitmap);
         public void InvokeOnInit() => owner.OnInit();
-        public void InvokeOnKeyDown(Keys key) => owner.OnKeyDown(key);
-        public void InvokeOnKeyUp(Keys key) => owner.OnKeyUp(key);
+        public void InvokeOnKeyDown(Key key) => owner.OnKeyDown(key);
+        public void InvokeOnKeyUp(Key key) => owner.OnKeyUp(key);
     }
 }

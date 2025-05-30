@@ -7,6 +7,10 @@ Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Stalcraft", "Stalcraft\Stal
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "ScreenCapture", "..\ScreenCapture\ScreenCapture\ScreenCapture.csproj", "{B910D668-487E-4BCD-8534-E17DD97246AB}"
 EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Interception", "..\..\repos\Interception\Interception\Interception.csproj", "{46B9B784-C495-4020-B32E-0BA1FE160FE8}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Interception.Implementation", "..\..\repos\Interception.Implementation\Interception.Implementation\Interception.Implementation.csproj", "{35028FEE-7A66-4607-AAEE-704207B6E8AD}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|x64 = Debug|x64
@@ -21,6 +25,14 @@ Global
 		{B910D668-487E-4BCD-8534-E17DD97246AB}.Debug|x64.Build.0 = Debug|x64
 		{B910D668-487E-4BCD-8534-E17DD97246AB}.Release|x64.ActiveCfg = Release|x64
 		{B910D668-487E-4BCD-8534-E17DD97246AB}.Release|x64.Build.0 = Release|x64
+		{46B9B784-C495-4020-B32E-0BA1FE160FE8}.Debug|x64.ActiveCfg = Debug|x64
+		{46B9B784-C495-4020-B32E-0BA1FE160FE8}.Debug|x64.Build.0 = Debug|x64
+		{46B9B784-C495-4020-B32E-0BA1FE160FE8}.Release|x64.ActiveCfg = Release|x64
+		{46B9B784-C495-4020-B32E-0BA1FE160FE8}.Release|x64.Build.0 = Release|x64
+		{35028FEE-7A66-4607-AAEE-704207B6E8AD}.Debug|x64.ActiveCfg = Debug|x64
+		{35028FEE-7A66-4607-AAEE-704207B6E8AD}.Debug|x64.Build.0 = Debug|x64
+		{35028FEE-7A66-4607-AAEE-704207B6E8AD}.Release|x64.ActiveCfg = Release|x64
+		{35028FEE-7A66-4607-AAEE-704207B6E8AD}.Release|x64.Build.0 = Release|x64
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE

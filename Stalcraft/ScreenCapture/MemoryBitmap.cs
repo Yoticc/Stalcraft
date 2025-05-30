@@ -20,25 +20,22 @@ unsafe class MemoryBitmap
     public SlicedMemoryBitmap Slice(int x, int y, int width, int height)
         => new(this, x, y, width, height);
 
-    public Bitmap AsGDIBitmap
+    public Bitmap GetGDIBitmap()
     {
-        get
-        {
-            var bitmap = new Bitmap(Width, Height);
-            for (var y = 0; y < Height; y++)
-                for (var x = 0; x < Width; x++)
-                {
-                    var pixel = this[x, y];
-                    bitmap.SetPixel(x, y, System.Drawing.Color.FromArgb(pixel.R, pixel.G, pixel.B));
-                }
+        var bitmap = new Bitmap(Width, Height);
+        for (var y = 0; y < Height; y++)
+            for (var x = 0; x < Width; x++)
+            {
+                var pixel = this[x, y];
+                bitmap.SetPixel(x, y, System.Drawing.Color.FromArgb(pixel.R, pixel.G, pixel.B));
+            }
 
-            return bitmap;
-        }
+        return bitmap;
     }
 
     public void Save(string path)
     {
-        using var bitmap = AsGDIBitmap;
+        using var bitmap = GetGDIBitmap();
         bitmap.Save(path);
     }
 
@@ -78,27 +75,30 @@ unsafe class SlicedMemoryBitmap
     public readonly int X, Y;
     public readonly int Width, Height;
 
-    public Pixel this[int x, int y] => Pixels[(Y + y) * ParentWidth + X + x];
-
-    public Bitmap AsGDIBitmap
+    public Pixel this[int x, int y]
     {
-        get
-        {
-            var bitmap = new Bitmap(Width, Height);
-            for (var y = 0; y < Height; y++)
-                for (var x = 0; x < Width; x++)
-                {
-                    var pixel = this[x, y];
-                    bitmap.SetPixel(x, y, System.Drawing.Color.FromArgb(pixel.R, pixel.G, pixel.B));
-                }
+        get => Pixels[(Y + y) * ParentWidth + X + x];
+        set => Pixels[(Y + y) * ParentWidth + X + x] = value;
+    }
 
-            return bitmap;
-        }
+    public Bitmap GetGDIBitmap()
+    {
+        var bitmap = new Bitmap(Width, Height);
+        for (var y = 0; y < Height; y++)
+            for (var x = 0; x < Width; x++)
+            {
+                //Console.Write($"{x} {y}", 0, 0);
+
+                var pixel = this[x, y];
+                bitmap.SetPixel(x, y, System.Drawing.Color.FromArgb(pixel.R, pixel.G, pixel.B));
+            }
+
+        return bitmap;
     }
 
     public void Save(string path)
     {
-        using var bitmap = AsGDIBitmap;
+        using var bitmap = GetGDIBitmap();
         bitmap.Save(path);
     }
 

@@ -1,4 +1,5 @@
 ﻿global using static SharedConfiguration;
+using Interception;
 using static Extensions;
 
 static unsafe class SharedConfiguration
@@ -50,7 +51,7 @@ static unsafe class ConfigurationFile
     }
 }
 
-unsafe record struct Configuration()
+unsafe struct Configuration()
 {
     HacksConfiguration hacks = new();
     public HacksConfiguration* Hacks => &self(ref this)->hacks;
@@ -62,29 +63,29 @@ unsafe record struct Configuration()
     public SettingsConfiguration* Settings => &self(ref this)->settings;
 }
 
-unsafe record struct HacksConfiguration()
+unsafe struct HacksConfiguration()
 {
-    HackState antiRecoil = new(Keys.Y);
-    HackState smartSteal = new(Keys.U);
-    HackState aimbot = new(Keys.I);
-    HackState autoX = new(Keys.O);
+    HackState antiRecoil = new(Key.Y);
+    HackState smartSteal = new(Key.U);
+    HackState aimbot = new(Key.I);
+    HackState autoX = new(Key.O);
 
     public HackState* States => &self(ref this)->antiRecoil;
     public HackState* GetHackState(Hack hack) => States + hack.InitIndex;
 
     public struct HackState
     {
-        public HackState(Keys keybind) => this.keybind = keybind;
+        public HackState(Key keybind) => this.keybind = keybind;
 
-        Keys keybind;
-        public Keys* Keybind => &self(ref this)->keybind;
+        Key keybind;
+        public Key* Keybind => &self(ref this)->keybind;
 
         bool isEnabled;
         public bool* IsEnabled => &self(ref this)->isEnabled;
     }
 }
 
-unsafe record struct OptionsConfiguration()
+unsafe struct OptionsConfiguration()
 {
     int clientWindowOpacity = 80;
     public int* ClientWindowOpacity => &self(ref this)->clientWindowOpacity;
@@ -93,7 +94,7 @@ unsafe record struct OptionsConfiguration()
     public int* StalcraftWindowOpacity => &self(ref this)->stalcraftWindowOpacity;
 }
 
-unsafe record struct SettingsConfiguration()
+unsafe struct SettingsConfiguration()
 {
     AimbotSettings aimbot = new();
     public AimbotSettings* Aimbot => &self(ref this)->aimbot;
@@ -105,7 +106,7 @@ unsafe record struct SettingsConfiguration()
     public AutoXSettings* AutoX => &self(ref this)->autoX;
 }
 
-unsafe record struct AimbotSettings()
+unsafe struct AimbotSettings()
 {
     int fov = 250;
     public int* Fov => &self(ref this)->fov;
@@ -114,13 +115,13 @@ unsafe record struct AimbotSettings()
     public int* Offset => &self(ref this)->offset;
 }
 
-unsafe record struct AntiRecoilSettings()
+unsafe struct AntiRecoilSettings()
 {
     Profile profile1, profile2, profile3, profile4;
 
     public Profile* Profiles => &self(ref this)->profile1;
 
-    public record struct Profile()
+    public struct Profile()
     {
         bool isExists;
         public bool* IsExists => &self(ref this)->isExists;
@@ -131,15 +132,15 @@ unsafe record struct AntiRecoilSettings()
         int delay = 6;
         public int* Delay => &self(ref this)->delay;
 
-        Keys keybind;
-        public Keys* Keybind => &self(ref this)->keybind;
+        Key keybind;
+        public Key* Keybind => &self(ref this)->keybind;
     }
 }
 
-unsafe record struct AutoXSettings()
+unsafe struct AutoXSettings()
 {
-    Keys keybind = Keys.Button2;
-    public Keys* Keybind => &self(ref this)->keybind;
+    Key keybind = Key.Button2;
+    public Key* Keybind => &self(ref this)->keybind;
 }
 
 unsafe static class Extensions

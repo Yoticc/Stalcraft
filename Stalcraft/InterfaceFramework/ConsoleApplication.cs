@@ -1,4 +1,5 @@
-﻿using System.Diagnostics;
+﻿using Interception;
+using System.Diagnostics;
 using System.Drawing;
 using static System.Windows.Forms.VisualStyles.VisualStyleElement.Window;
 
@@ -107,7 +108,7 @@ unsafe static class ConsoleApplication
                 return;
 
             currentWindow.Dispatcher.InvokeOnMouseMove(x, y);
-            if (Interception.IsLeftMouseDown)
+            if (InterceptionImpl.IsLeftMouseDown)
                 OnMouseDrag(x, y);
         }
     }
@@ -145,13 +146,13 @@ unsafe static class ConsoleApplication
 
     static void RegisterInterceptionEvents()
     {
-        Interception.OnKeyUp += key => 
+        InterceptionImpl.OnKeyUp += key => 
         {
             OnKeyUp(key);
             return false;
         };
 
-        Interception.OnKeyDown += (key, repeat) =>
+        InterceptionImpl.OnKeyDown += (key, repeat) =>
         {
             if (repeat)
                 return false;
@@ -160,12 +161,12 @@ unsafe static class ConsoleApplication
             return false;
         };
 
-        Interception.OnMouseMove += OnMouseRelativeMove;
+        InterceptionImpl.OnMouseMove += OnMouseRelativeMove;
     }
 
-    static void OnKeyUp(Keys key)
+    static void OnKeyUp(Key key)
     {
-        if (key == Keys.MouseLeft)
+        if (key == Key.MouseLeft)
         {
             if (isWindowCaught)
                 isWindowCaught = false;
@@ -174,16 +175,16 @@ unsafe static class ConsoleApplication
             OnMouseClick();
             OnMouseLeftClick();
         }
-        else if (key == Keys.MouseRight)
+        else if (key == Key.MouseRight)
         {
             OnMouseClick();
             OnMouseRightClick();
         }
     }
 
-    static void OnKeyDown(Keys key)
+    static void OnKeyDown(Key key)
     {
-        if (key == Keys.MouseLeft)
+        if (key == Key.MouseLeft)
         {
             OnMouseLeftDown();
             OnMouseDrag(lastMouseOnConsoleX, lastMouseOnConsoleY);

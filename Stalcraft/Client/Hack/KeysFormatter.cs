@@ -1,4 +1,6 @@
-﻿static class KeysFormatter
+﻿using Interception;
+
+static class KeysFormatter
 {
     static KeysFormatter()
     {
@@ -7,23 +9,23 @@
         foreach (var value in values)
             names[(short)value + 100] = value.ToString().TrimStart('_').Replace("__", "TEMP").Replace("_", " ").Replace("TEMP", "_");
 
-        SetName(Keys.OpenBracket, "[");
-        SetName(Keys.CloseBracket, "]");
-        SetName(Keys.Backslash, "\\");
-        SetName(Keys.Slash, "/");
-        SetName(Keys.Semicolon, ":");
-        SetName(Keys.Tilde, "~");
-        SetName(Keys.Period, ".");
-        SetName(Keys.Comma, ",");
-        SetName(Keys.Minus, "-");
-        SetName(Keys.Plus, "+");
+        SetName(Key.OpenBracket, "[");
+        SetName(Key.CloseBracket, "]");
+        SetName(Key.Backslash, "\\");
+        SetName(Key.Slash, "/");
+        SetName(Key.Semicolon, ":");
+        SetName(Key.Tilde, "~");
+        SetName(Key.Period, ".");
+        SetName(Key.Comma, ",");
+        SetName(Key.Minus, "-");
+        SetName(Key.Plus, "+");
 
-        void SetName(Keys key, string name) => names[(short)key + 100] = name;
+        void SetName(Key key, string name) => names[(short)key + 100] = name;
     }
 
     static string[] names;
 
-    public static string Formate(Keys key) => names[(short)key + 100];
+    public static string Formate(Key key) => names[(short)key + 100];
 
     enum FormattedKeys : short
     {

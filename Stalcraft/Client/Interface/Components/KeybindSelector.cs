@@ -1,8 +1,9 @@
-﻿using System.Drawing;
+﻿using Interception;
+using System.Drawing;
 
 class KeybindSelector : MultistyleLabel
 {
-    public KeybindSelector(Keys key, Action<Keys>? valueChange = null, Point location = default) : base(ConsoleMultistyleText.Empty, location)
+    public KeybindSelector(Key key, Action<Key>? valueChange = null, Point location = default) : base(ConsoleMultistyleText.Empty, location)
     {
         ValueChange = valueChange;
         SetValue(key);
@@ -16,13 +17,13 @@ class KeybindSelector : MultistyleLabel
         text.Add(text: "]", styles: ConsoleForegroundColor.DarkGray);
         SetText(text);
 
-        Interception.OnKeyUp += OnKeyUp;
+        InterceptionImpl.OnKeyUp += OnKeyUp;
         base.OnMouseLeftClick();
 
-        bool OnKeyUp(Keys key)
+        bool OnKeyUp(Key key)
         {
-            Interception.OnKeyUp -= OnKeyUp;
-            if (key == Keys.Esc)
+            InterceptionImpl.OnKeyUp -= OnKeyUp;
+            if (key == Key.Esc)
                 Update();
             else SetValue(key);
 
@@ -30,12 +31,12 @@ class KeybindSelector : MultistyleLabel
         }
     }
 
-    Keys value;
-    public Keys Value => value;
+    Key value;
+    public Key Value => value;
 
-    public Action<Keys>? ValueChange;
+    public Action<Key>? ValueChange;
 
-    public void SetValue(Keys value)
+    public void SetValue(Key value)
     {
         this.value = value;
         ValueChange?.Invoke(value);

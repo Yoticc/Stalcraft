@@ -76,6 +76,12 @@ static unsafe class User32
 
     public static void SetCursorPosition(int x, int y) => SetCursorPos(x, y);
 
+    public static void MoveCursor(int x, int y)
+    {
+        var oldPos = GetCursorPosition();
+        SetCursorPosition(oldPos.X + x, oldPos.Y + y);
+    }
+
     public static Rectangle GetWindowRectangle(nint hwnd)
     {
         int* rectangle = stackalloc int[4];

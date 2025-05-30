@@ -1,8 +1,9 @@
-﻿using System.Drawing;
+﻿using Interception;
+using System.Drawing;
 
 class KeybindOptionPanel : Panel
 {
-    public KeybindOptionPanel(string optionName, Keys key, Action<Keys>? valueChange = null, Point location = default)
+    public KeybindOptionPanel(string optionName, Key key, Action<Key>? valueChange = null, Point location = default)
        : base(location, size: new(optionName.Length + 12, 1))
     {
         ValueChange = valueChange;
@@ -15,7 +16,7 @@ class KeybindOptionPanel : Panel
 
     KeybindSelector selector;
 
-    public Action<Keys>? ValueChange;
+    public Action<Key>? ValueChange;
 
-    public void SetValue(Keys value) => selector.SetValue(value);
+    public void SetValue(Key value) => selector.SetValue(value);
 }

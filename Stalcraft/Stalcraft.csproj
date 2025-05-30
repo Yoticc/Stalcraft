@@ -7,10 +7,12 @@
     <Nullable>enable</Nullable>
     <AllowUnsafeBlocks>true</AllowUnsafeBlocks>
     <Platforms>x64</Platforms>
+    <PublishAot>True</PublishAot>
+    <PublishTrimmed>True</PublishTrimmed>
   </PropertyGroup>
 
   <ItemGroup>
-    <Folder Include="Auxiliaeities\" />
+    <Folder Include="Auxiliaries\" />
   </ItemGroup>
 
   <ItemGroup>
@@ -18,6 +20,8 @@
   </ItemGroup>
 
   <ItemGroup>
+    <ProjectReference Include="..\..\..\repos\Interception.Implementation\Interception.Implementation\Interception.Implementation.csproj" />
+    <ProjectReference Include="..\..\..\repos\Interception\Interception\Interception.csproj" />
     <ProjectReference Include="..\..\ScreenCapture\ScreenCapture\ScreenCapture.csproj" />
   </ItemGroup>
 

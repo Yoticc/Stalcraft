@@ -1,4 +1,7 @@
-﻿class AntiRecoilHack : Hack
+﻿using Interception;
+using System.Windows.Forms.Design;
+
+class AntiRecoilHack : Hack
 {
     public AntiRecoilHack() : base("anti recoil") => new Thread(ThreadBody).Start();
 
@@ -18,9 +21,11 @@
                 continue;
             }
 
-            if (Interception.IsLeftMouseDown && Interception.IsRightMouseDown)
+            if (InterceptionImpl.IsLeftMouseDown && InterceptionImpl.IsRightMouseDown)
             {
-                Interception.MouseMove(0, 4);
+                InterceptionImpl.MoveMouse(0, 4);
+
+                Thread.Sleep(4);
             }
         }
     }
